@@ -1,0 +1,33 @@
+#
+# Description
+# -----------
+# This table stores the list of steps or tasks that are required
+# for a service.
+#
+# Fields
+# ------
+# id:				The ID of the task.
+# service_id:		The ID of the service the task is for.
+# step:				The step number for this task.  
+# name:				The name of the step.
+# description:		The description for the step (optional).
+# instructions:		The instructions for the step (optional).
+# duration:			The length of time the task will take.
+# billable_hours:	The number of hours billed for this task.
+# date_added:		The UTC date and time the task was added.
+# last_updated:		The UTC date and time the task was last changed.
+#
+create table ciniki_service_tasks (
+	id int not null auto_increment,
+	service_id int not null,
+	step tinyint unsigned not null,
+	name varchar(250) not null,
+	description varchar(6000) not null,
+	instructions varchar(20000) not null,
+	duration int not null,
+	billable_hours decimal(6,4) not null,
+	date_added datetime not null,
+	last_updated datetime not null,
+	primary key (id),
+	index (service_id, step)
+) ENGINE='InnoDB', COMMENT='v1.00';

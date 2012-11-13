@@ -1,0 +1,38 @@
+#
+# Description
+# -----------
+# This table stores the customers and recurring services they have subscribed to.
+# The services may be ones the customer has subscribed to, or been assigned by
+# the business.  Recurring services can be tracked to forecast upcoming work.
+#
+# Fields
+# ------
+# id:				The ID of the customer service entry.
+# service_id:		The ID of the recurring service the customer is subscribed to.
+# customer_id:		The ID of the customer.
+# status:			The current status of the subscription.
+#
+#					0 - unknown
+#					1 - active
+#					60 - deleted
+#
+# date_started:		The UTC date and time the service started.  This allows services
+#					to be started and tracking will know if there are missing jobs.
+#
+# date_ended:		The UTC date and time the service stopped or will stop for the customer.
+#
+# date_added:		The UTC date and time the service record was added.
+# last_updated:		The UTC date and time the service was last updated.
+#
+create table ciniki_service_customers (
+	id int not null auto_increment,
+	service_id int not null,
+	customer_id int not null,
+	status tinyint unsigned not null,
+	date_started datetime not null,
+	date_ended datetime not null,
+	date_added datetime not null,
+	last_updated datetime not null,
+	primary key (id),
+	unique index (service_id, customer_id)
+) ENGINE='InnoDB', COMMENT='v1.00';
