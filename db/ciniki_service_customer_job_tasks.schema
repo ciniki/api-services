@@ -21,7 +21,6 @@
 # date_started:		The date and time the task was started.
 # date_due:			The date and time the task must be finished by.
 # date_completed:	The date and time the task was completed.
-# billed_hours:		The number of hours or fraction of hours it took to complete the task.
 # date_added:		The UTC date and time the task was added to the table.
 # last_updated:		The UTC date and time the task was last updated.
 #
@@ -34,7 +33,6 @@ create table ciniki_service_customer_job_tasks (
 	date_started datetime not null,
 	date_due datetime not null,
 	date_completed datetime not null,
-	billed_hours decimal(6,4) not null,
 	date_added datetime not null,
 	last_updated datetime not null,
 	primary key(id),
