@@ -30,4 +30,4 @@ create table ciniki_service_tasks (
 	last_updated datetime not null,
 	primary key (id),
 	index (service_id, step)
-) ENGINE='InnoDB', COMMENT='v1.00';
+) ENGINE='InnoDB', COMMENT='v1.01';

@@ -47,4 +47,4 @@ create table ciniki_service_customer_jobs (
 	last_updated datetime not null,
 	primary key (id),
 	index (customer_id, service_id)
-) ENGINE='InnoDB', COMMENT='v1.00';
+) ENGINE='InnoDB', COMMENT='v1.01';

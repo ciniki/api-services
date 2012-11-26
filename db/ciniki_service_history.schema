@@ -57,4 +57,4 @@ create table ciniki_service_history (
 	index (user_id), 
 	index (business_id, table_name, table_key, table_field),
 	index (log_date)
-) ENGINE=InnoDB, COMMENT='v1.00';
+) ENGINE=InnoDB, COMMENT='v1.01';

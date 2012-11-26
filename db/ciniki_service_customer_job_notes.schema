@@ -27,4 +27,4 @@ create table ciniki_service_customer_job_notes (
 	last_updated datetime not null,
 	primary key (id),
 	index (job_id, user_id)
-) ENGINE='InnoDB', COMMENT='v1.00';
+) ENGINE='InnoDB', COMMENT='v1.01';

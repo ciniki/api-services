@@ -35,4 +35,4 @@ create table ciniki_service_customers (
 	last_updated datetime not null,
 	primary key (id),
 	unique index (service_id, customer_id)
-) ENGINE='InnoDB', COMMENT='v1.00';
+) ENGINE='InnoDB', COMMENT='v1.01';
