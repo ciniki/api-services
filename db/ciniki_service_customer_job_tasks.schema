@@ -36,6 +36,5 @@ create table ciniki_service_customer_job_tasks (
 	date_added datetime not null,
 	last_updated datetime not null,
 	primary key(id),
-	unique index (uuid),
 	unique index (job_id, task_id)
 ) ENGINE='InnoDB', COMMENT='v1.01';

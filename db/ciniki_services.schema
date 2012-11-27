@@ -19,6 +19,7 @@
 #					60 - deleted
 #
 # name:				The name of the service.
+# category:			The category for the service.
 # type:				The type of the service **Not currently used**.
 # duration:			How long the service should take.
 # repeat_type:		If the service is a repeatable service.
@@ -42,6 +43,7 @@ create table ciniki_services (
 	business_id int not null,
 	status tinyint unsigned not null,
 	name varchar(250) not null,
+	category varchar(50) not null,
 	type tinyint unsigned not null,
 	duration int not null,
 	repeat_type tinyint unsigned not null,
