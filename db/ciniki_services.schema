@@ -29,7 +29,8 @@
 #					20 - weekly
 #					30 - monthly, day of month
 #					31 - monthly, day of week
-#					40 - yearly
+#					40 - quarterly
+#					50 - yearly
 #
 # repeat_interval:	The interval to repeat the service. (default 1)
 # repeat_number:	The number of times the service is to repeat.  0 - infinite.
@@ -48,7 +49,7 @@ create table ciniki_services (
 	duration int not null,
 	repeat_type tinyint unsigned not null,
 	repeat_interval int not null,
-	repeat_end datetime not null,
+	repeat_number int not null,
 	date_added datetime not null,
 	last_updated datetime not null,
 	primary key (id),
