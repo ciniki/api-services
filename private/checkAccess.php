@@ -10,11 +10,13 @@
 // ciniki:
 // business_id: 		The ID of the business the request is for.
 // method:				The method requested in the services module.
+// service_id:			The ID of the service, if specified to check if the user
+//						has access to.
 // 
 // Returns
 // =======
 //
-function ciniki_services_checkAccess($ciniki, $business_id, $method) {
+function ciniki_services_checkAccess($ciniki, $business_id, $method, $service_id) {
 	//
 	// Check if the business is active and the module is enabled
 	//

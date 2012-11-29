@@ -33,7 +33,8 @@
 #					50 - yearly
 #
 # repeat_interval:	The interval to repeat the service. (default 1)
-# repeat_number:	The number of times the service is to repeat.  0 - infinite.
+# repeat_number:	The number of times the service is to repeat.  **future** 
+#					Assume 0 = infinite.
 #
 # date_added:		The UTC date and time the service was added to the database.
 # last_updated:		The UTC date and time the service was last changed.
