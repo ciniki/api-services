@@ -16,7 +16,7 @@
 // Returns
 // =======
 //
-function ciniki_services_checkAccess($ciniki, $business_id, $method, $service_id) {
+function ciniki_services_checkAccess($ciniki, $business_id, $method, $req_id) {
 	//
 	// Check if the business is active and the module is enabled
 	//
@@ -35,13 +35,13 @@ function ciniki_services_checkAccess($ciniki, $business_id, $method, $service_id
 		return array('stat'=>'fail', 'err'=>array('pkg'=>'ciniki', 'code'=>'833', 'msg'=>'No permissions granted'));
 	}
 
-// FIXME: Check if this is needed
-//	//
-//	// Sysadmins are allowed full access, except for deleting.
-//	//
-//	if( $method != 'ciniki.services.delete' ) {
-//		if( ($ciniki['session']['user']['perms'] & 0x01) == 0x01 ) {
-//			return array('stat'=>'ok', 'modules'=>$modules);
+	// FIXME: Check if this is needed
+	//	//
+	//	// Sysadmins are allowed full access, except for deleting.
+	//	//
+	//	if( $method != 'ciniki.services.delete' ) {
+	//		if( ($ciniki['session']['user']['perms'] & 0x01) == 0x01 ) {
+	//			return array('stat'=>'ok', 'modules'=>$modules);
 //		}
 //	}
 //
@@ -64,6 +64,45 @@ function ciniki_services_checkAccess($ciniki, $business_id, $method, $service_id
 	//
 	if( isset($rc['rows']) && isset($rc['rows'][0]) 
 		&& $rc['rows'][0]['user_id'] > 0 && $rc['rows'][0]['user_id'] == $ciniki['session']['user']['id'] ) {
+
+		if( $method == 'ciniki.services.serviceUpdate'
+			|| $method == 'ciniki.services.serviceGet' ) {
+			//
+			// Check to make sure the task is assigned to business
+			//
+			$strsql = "SELECT ciniki_services.id "
+				. "FROM ciniki_services "
+				. "WHERE ciniki_services.id = '" . ciniki_core_dbQuote($ciniki, $req_id) . "' "
+				. "AND ciniki_services.business_id = '" . ciniki_core_dbQuote($ciniki, $business_id) . "' "
+				. "";
+			$rc = ciniki_core_dbHashQuery($ciniki, $strsql, 'ciniki.services', 'service');
+			if( $rc['stat'] != 'ok' ) {
+				return $rc;
+			}
+			if( !isset($rc['service']) || $rc['service']['id'] != $req_id ) {
+				return array('stat'=>'fail', 'err'=>array('pkg'=>'ciniki', 'code'=>'843', 'msg'=>'Permission denied'));
+			}
+		}
+		if( $method == 'ciniki.services.taskUpdate'
+			|| $method == 'ciniki.services.taskGet' ) {
+			//
+			// Check to make sure the task is assigned to business
+			//
+			$strsql = "SELECT ciniki_service_tasks.id "
+				. "FROM ciniki_service_tasks, ciniki_services "
+				. "WHERE ciniki_service_tasks.id = '" . ciniki_core_dbQuote($ciniki, $req_id) . "' "
+				. "AND ciniki_service_tasks.service_id = ciniki_services.id "
+				. "AND ciniki_services.business_id = '" . ciniki_core_dbQuote($ciniki, $business_id) . "' "
+				. "";
+			$rc = ciniki_core_dbHashQuery($ciniki, $strsql, 'ciniki.services', 'task');
+			if( $rc['stat'] != 'ok' ) {
+				return $rc;
+			}
+			if( !isset($rc['task']) || $rc['task']['id'] != $req_id ) {
+				return array('stat'=>'fail', 'err'=>array('pkg'=>'ciniki', 'code'=>'844', 'msg'=>'Permission denied'));
+			}
+		}
+
 		return array('stat'=>'ok', 'modules'=>$modules);
 	}
 
