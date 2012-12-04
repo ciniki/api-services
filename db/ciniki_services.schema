@@ -20,7 +20,13 @@
 #
 # name:				The name of the service.
 # category:			The category for the service.
-# type:				The type of the service **Not currently used**.
+# type:				The type of the service.  The type of service helps the
+#					API to determine which information should be accepted or
+#					rejected, and which information should be returned.
+#
+#					0 - unknown
+#					1 - tax preparation
+#
 # duration:			How long the service should take.
 # repeat_type:		If the service is a repeatable service.
 #					
@@ -36,7 +42,13 @@
 # repeat_number:	The number of times the service is to repeat.  **future** 
 #					Assume 0 = infinite.
 #
-# due_after_months:	This field is used for tax services, to know how many months
+# due_after_days:	This field is combined with due_after_months to set the due date
+#					for a service job.
+#
+# due_after_months:	This field is used to automatically set the due date for a
+#					service X number of months after the service date.
+#
+#					This field was developed for tax services, to know how many months
 #					after the fiscal year end the service must be completed.  For
 #					Individual tax returns, this would be 4, which means individual 
 #					tax returns must be completed 4 months after dec 31, or Apr 30.
@@ -57,6 +69,7 @@ create table ciniki_services (
 	repeat_type tinyint unsigned not null,
 	repeat_interval int not null,
 	repeat_number int not null,
+	due_after_days tinyint not null,
 	due_after_months tinyint not null,
 	date_added datetime not null,
 	last_updated datetime not null,

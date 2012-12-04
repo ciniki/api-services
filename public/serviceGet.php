@@ -65,9 +65,10 @@ function ciniki_services_serviceGet($ciniki) {
 	// Get the service information
 	//
 	if( isset($args['children']) && $args['children'] == 'yes' ) {
-		$strsql = "SELECT ciniki_services.id, ciniki_services.status, "
+		$strsql = "SELECT ciniki_services.id, ciniki_services.status, ciniki_services.type, "
 			. "ciniki_services.name, ciniki_services.category, "
 			. "ciniki_services.duration, ciniki_services.repeat_type, ciniki_services.repeat_interval, "
+			. "ciniki_services.due_after_days, ciniki_services.due_after_months, "
 			. "ciniki_service_tasks.id AS task_id, "
 			. "ciniki_service_tasks.step, ciniki_service_tasks.name AS task_name, "
 			. "ciniki_service_tasks.description, ciniki_service_tasks.instructions, "
@@ -83,15 +84,17 @@ function ciniki_services_serviceGet($ciniki) {
 		ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'dbHashQueryTree');
 		$rc = ciniki_core_dbHashQueryTree($ciniki, $strsql, 'ciniki.services', array(
 			array('container'=>'services', 'fname'=>'id', 'name'=>'service',
-				'fields'=>array('id', 'status', 'name', 'category', 'duration', 
-					'repeat_type', 'repeat_interval', 'date_added', 'last_updated')),
+				'fields'=>array('id', 'status', 'name', 'category', 'type', 'duration', 
+					'repeat_type', 'repeat_interval', 'date_added', 'last_updated', 
+					'due_after_days', 'due_after_months')),
 			array('container'=>'tasks', 'fname'=>'task_id', 'name'=>'task',
 				'fields'=>array('id'=>'task_id', 'step', 'name'=>'task_name', 'description', 'instructions', 'duration')),
 			));
 	} else {
-		$strsql = "SELECT ciniki_services.id, ciniki_services.status, "
+		$strsql = "SELECT ciniki_services.id, ciniki_services.status, ciniki_services.type, "
 			. "ciniki_services.name, ciniki_services.category, "
 			. "ciniki_services.duration, ciniki_services.repeat_type, ciniki_services.repeat_interval, "
+			. "ciniki_services.due_after_days, ciniki_services.due_after_months, "
 			. "DATE_FORMAT(CONVERT_TZ(ciniki_services.date_added, '+00:00', '" . ciniki_core_dbQuote($ciniki, $utc_offset) . "'), '" . ciniki_core_dbQuote($ciniki, $datetime_format) . "') AS date_added, "
 			. "DATE_FORMAT(CONVERT_TZ(ciniki_services.last_updated, '+00:00', '" . ciniki_core_dbQuote($ciniki, $utc_offset) . "'), '" . ciniki_core_dbQuote($ciniki, $datetime_format) . "') AS last_updated "
 			. "FROM ciniki_services "
@@ -102,8 +105,9 @@ function ciniki_services_serviceGet($ciniki) {
 		ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'dbHashQueryTree');
 		$rc = ciniki_core_dbHashQueryTree($ciniki, $strsql, 'ciniki.services', array(
 			array('container'=>'services', 'fname'=>'id', 'name'=>'service',
-				'fields'=>array('id', 'status', 'name', 'category', 'duration', 
-					'repeat_type', 'repeat_interval', 'date_added', 'last_updated')),
+				'fields'=>array('id', 'status', 'name', 'category', 'type', 'duration', 
+					'repeat_type', 'repeat_interval', 'date_added', 'last_updated', 
+					'due_after_days', 'due_after_months')),
 			));
 	}
 	if( $rc['stat'] != 'ok' ) {

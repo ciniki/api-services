@@ -8,20 +8,28 @@
 // ---------
 // api_key:
 // auth_token:
-// business_id:		The ID of the business to add the service to.
-// name:			The name of the service.
-// category:		(optional) The category for the service.
-// duration:		(optional) The length of time in minutes the service should take to complete.
-// repeat_type:		(optional) If the service is repeatable, how should it repeat.
+// business_id:			The ID of the business to add the service to.
+// type:				The type of the service.
+//					
+//						1 - Generic
+//						10 - Tax Preparation
 //
-//					10 - Daily
-//					20 - Weekly
-//					30 - Monthly
-//					40 - Yearly
+// name:				The name of the service.
+// category:			(optional) The category for the service.
+// duration:			(optional) The length of time in minutes the service should take to complete.
+// repeat_type:			(optional) If the service is repeatable, how should it repeat.
 //
-// repeat_interval:	(optional) The interval between repeating the service.  
-//					If the repeat_type is daily, and interval is 4, the service
-//					will repeat every 4 weeks.
+//						10 - Daily
+//						20 - Weekly
+//						30 - Monthly
+//						40 - Yearly
+//
+// repeat_interval:		(optional) The interval between repeating the service.  
+//						If the repeat_type is daily, and interval is 4, the service
+//						will repeat every 4 weeks.
+//
+// due_after_days:		(optional) The number of days after the service date the service will be due.
+// due_after_months:	(optional) The number of months after the service date the service will be due.
 // 
 // Returns
 // -------
@@ -34,12 +42,17 @@ function ciniki_services_serviceAdd($ciniki) {
 	ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'prepareArgs');
     $rc = ciniki_core_prepareArgs($ciniki, 'no', array(
         'business_id'=>array('required'=>'yes', 'blank'=>'no', 'errmsg'=>'No business specified'), 
+		'type'=>array('required'=>'yes', 'blank'=>'no', 
+			'validlist'=>array('1', '10'), 'errmsg'=>'No type specified'),
 		'name'=>array('required'=>'yes', 'blank'=>'no', 'errmsg'=>'No name specified'),
         'category'=>array('required'=>'no', 'blank'=>'yes', 'default'=>'', 'errmsg'=>'No category specified'), 
 		'status'=>array('required'=>'no', 'blank'=>'no', 'default'=>'10', 'errmsg'=>'No status specified'),
         'duration'=>array('required'=>'no', 'default'=>'0', 'blank'=>'yes', 'errmsg'=>'No duration specified'), 
-        'repeat_type'=>array('required'=>'no', 'default'=>'0', 'blank'=>'yes', 'errmsg'=>'No repeat specified'), 
+        'repeat_type'=>array('required'=>'no', 'default'=>'0', 'blank'=>'yes', 
+			'validlist'=>array('0', '10', '20', '30', '40'), 'errmsg'=>'No repeat specified'), 
         'repeat_interval'=>array('required'=>'no', 'default'=>'1', 'blank'=>'yes', 'errmsg'=>'No repeat interval specified'), 
+        'due_after_days'=>array('required'=>'no', 'default'=>'0', 'blank'=>'yes', 'errmsg'=>'No due after days specified'), 
+        'due_after_months'=>array('required'=>'no', 'default'=>'0', 'blank'=>'yes', 'errmsg'=>'No due after months specified'), 
         )); 
     if( $rc['stat'] != 'ok' ) { 
         return $rc;
@@ -76,17 +89,20 @@ function ciniki_services_serviceAdd($ciniki) {
 	$strsql = "INSERT INTO ciniki_services (uuid, business_id, status, "
 		. "name, category, type, "
 		. "duration, repeat_type, repeat_interval, repeat_number, "
+		. "due_after_days, due_after_months, "
 		. "date_added, last_updated) VALUES ("
 		. "UUID(), "
 		. "'" . ciniki_core_dbQuote($ciniki, $args['business_id']) . "', "
 		. "'" . ciniki_core_dbQuote($ciniki, $args['status']) . "', "
 		. "'" . ciniki_core_dbQuote($ciniki, $args['name']) . "', "
 		. "'" . ciniki_core_dbQuote($ciniki, $args['category']) . "', "
-		. "0, "
+		. "'" . ciniki_core_dbQuote($ciniki, $args['type']) . "', "
 		. "'" . ciniki_core_dbQuote($ciniki, $args['duration']) . "', "
 		. "'" . ciniki_core_dbQuote($ciniki, $args['repeat_type']) . "', "
 		. "'" . ciniki_core_dbQuote($ciniki, $args['repeat_interval']) . "', "
 		. "0, "
+		. "'" . ciniki_core_dbQuote($ciniki, $args['due_after_days']) . "', "
+		. "'" . ciniki_core_dbQuote($ciniki, $args['due_after_months']) . "', "
 		. "UTC_TIMESTAMP(), UTC_TIMESTAMP())"
 		. "";
 	$rc = ciniki_core_dbInsert($ciniki, $strsql, 'ciniki.services');
@@ -107,9 +123,12 @@ function ciniki_services_serviceAdd($ciniki) {
 		'status',
 		'name',
 		'category',
+		'type',
 		'duration',
 		'repeat_type',
 		'repeat_interval',
+		'due_after_days',
+		'due_after_months',
 		);
 	foreach($changelog_fields as $field) {
 		$insert_name = $field;

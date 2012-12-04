@@ -8,20 +8,28 @@
 // ---------
 // api_key:
 // auth_token:
-// business_id:		The ID of the business the service belongs to.
-// service_id:		The ID of the service to update.
-// name:			(optional) The new name for the service.
-// category:		(optional) The new category for the service.
-// status:			(optional) The new status for the service.
-// duration:		(optional) The new duration for the service.
-// repeat_type:		(optional) The new type of repeat for the service.
+// business_id:			The ID of the business the service belongs to.
+// service_id:			The ID of the service to update.
+// name:				(optional) The new name for the service.
+// category:			(optional) The new category for the service.
+// type:				(optional) The type of the service.
+//					
+//						1 - Generic
+//						10 - Tax Preparation
 //
-//					10 - Daily
-//					20 - Weekly
-//					30 - Monthly
-//					40 - Yearly
+// status:				(optional) The new status for the service.
+// duration:			(optional) The new duration for the service.
+// repeat_type:			(optional) The new type of repeat for the service.
 //
-// repeat_interval:	(optional) The new repeat interval for the service.
+//						10 - Daily
+//						20 - Weekly
+//						30 - Monthly
+//						40 - Yearly
+//
+// repeat_interval:		(optional) The new repeat interval for the service.
+// 
+// due_after_days:		(optional) The number of days after the service date the service will be due.
+// due_after_months:	(optional) The number of months after the service date the service will be due.
 // 
 // Returns
 // -------
@@ -37,10 +45,15 @@ function ciniki_services_serviceUpdate($ciniki) {
         'service_id'=>array('required'=>'yes', 'blank'=>'no', 'errmsg'=>'No ID specified'), 
 		'name'=>array('required'=>'no', 'blank'=>'no', 'errmsg'=>'No name specified'),
         'category'=>array('required'=>'no', 'blank'=>'no', 'errmsg'=>'No category specified'), 
+		'type'=>array('required'=>'no', 'blank'=>'no', 
+			'validlist'=>array('1', '10'), 'errmsg'=>'No type specified'),
         'status'=>array('required'=>'no', 'blank'=>'no', 'errmsg'=>'No status specified'), 
         'duration'=>array('required'=>'no', 'blank'=>'no', 'errmsg'=>'No duration specified'), 
-        'repeat_type'=>array('required'=>'no', 'blank'=>'no', 'errmsg'=>'No repeat specified'), 
+        'repeat_type'=>array('required'=>'no', 
+			'validlist'=>array('0', '10', '20', '30', '40'), 'errmsg'=>'No repeat specified'), 
         'repeat_interval'=>array('required'=>'no', 'blank'=>'no', 'errmsg'=>'No repeat interval specified'), 
+        'due_after_days'=>array('required'=>'no', 'blank'=>'no', 'errmsg'=>'No due after days specified'), 
+        'due_after_months'=>array('required'=>'no', 'blank'=>'no', 'errmsg'=>'No due after months specified'), 
         )); 
     if( $rc['stat'] != 'ok' ) { 
         return $rc;
@@ -82,10 +95,13 @@ function ciniki_services_serviceUpdate($ciniki) {
 	$changelog_fields = array(
 		'name',
 		'category',
+		'type',
 		'status',
 		'duration',
 		'repeat_type',
 		'repeat_interval',
+		'due_after_days',
+		'due_after_months',
 		);
 	foreach($changelog_fields as $field) {
 		if( isset($args[$field]) ) {
