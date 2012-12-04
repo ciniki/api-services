@@ -13,13 +13,18 @@
 # status:			The current status of the subscription.
 #
 #					0 - unknown
-#					1 - active
+#					10 - active
 #					60 - deleted
 #
 # date_started:		The UTC date and time the service started.  This allows services
 #					to be started and tracking will know if there are missing jobs.
+#					This date should be the last day of the period serviced.  For
+#					individual tax returns, that would be Dec 31, 2007 as an example.
+#					For a corportation tax return, it should be the last day of their 
+#					fiscal year.
 #
-# date_ended:		The UTC date and time the service stopped or will stop for the customer.
+# date_ended:		The UTC date and time the service stopped or will stop 
+#					for the customer.
 #
 # date_added:		The UTC date and time the service record was added.
 # last_updated:		The UTC date and time the service was last updated.

@@ -1,0 +1,28 @@
+#
+# Description
+# -----------
+# This table stores any filedepot files for the job.
+#
+# Fields
+# ------
+# id:					The ID of the note.
+# parent_id:			The ID of the parent, for nested notes.  **future**
+# job_id:				The ID of the job in the ciniki_service_customer_jobs table.
+# task_id:				The ID of the job task which the notes are attached to.  **future**
+# user_id:				The ID of the user who added the note.
+# content:				The content of the note.
+# date_added:			The UTC date and time the note was added.
+# last_updated:			The UTC date and time the note was last updated.
+#
+create table ciniki_service_customer_job_notes (
+	id bigint not null auto_increment,
+	parent_id bigint not null,
+	job_id int not null,
+	task_id int not null,
+	user_id int not null,
+	content text,
+	date_added datetime not null,
+	last_updated datetime not null,
+	primary key (id),
+	index (job_id, user_id)
+) ENGINE='InnoDB', COMMENT='v1.01';

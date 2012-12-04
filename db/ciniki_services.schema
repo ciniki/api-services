@@ -36,6 +36,12 @@
 # repeat_number:	The number of times the service is to repeat.  **future** 
 #					Assume 0 = infinite.
 #
+# due_after_months:	This field is used for tax services, to know how many months
+#					after the fiscal year end the service must be completed.  For
+#					Individual tax returns, this would be 4, which means individual 
+#					tax returns must be completed 4 months after dec 31, or Apr 30.
+#					For corporations, it would be 6 months after fiscal year end.
+#
 # date_added:		The UTC date and time the service was added to the database.
 # last_updated:		The UTC date and time the service was last changed.
 #
@@ -51,6 +57,7 @@ create table ciniki_services (
 	repeat_type tinyint unsigned not null,
 	repeat_interval int not null,
 	repeat_number int not null,
+	due_after_months tinyint not null,
 	date_added datetime not null,
 	last_updated datetime not null,
 	primary key (id),

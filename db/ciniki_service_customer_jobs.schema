@@ -12,9 +12,18 @@
 # invoice_id:				The ID of the invoice the job was billed on.  This
 #							may be 0 if the service is not yet or will not be
 #							attached to an invoice.
+#
 # name:						The name/label given to this service.  Typically this
 #							will be the year or date of service.
-# service_date:				The date the job was done.
+#
+# service_date:				The date the job was done, or the last day for the 
+#							period this job covers.  For tax services, this will
+#							be the fiscal year end, quarter or month end.  This
+#							field is used to find jobs and match them with 
+#							what jobs should be done for a subscription service.
+#							For example, if an individual tax return for the year 2007,
+#							would have a service_date of Dec 31, 2007.  The date due
+#							assigned to the job would be Apr 30, 2008.
 #
 # status:					The status of the job, if it's completed or not.
 #
