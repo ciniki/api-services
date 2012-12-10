@@ -31,12 +31,10 @@
 # repeat_type:		If the service is a repeatable service.
 #					
 #					0 - no repeat
-#					10 - daily (not used)
-#					20 - weekly
+#					10 - daily (not used)  **future**
+#					20 - weekly	** future **
 #					30 - monthly, day of month
-#					31 - monthly, day of week
-#					40 - quarterly
-#					50 - yearly
+#					40 - yearly
 #
 # repeat_interval:	The interval to repeat the service. (default 1)
 # repeat_number:	The number of times the service is to repeat.  **future** 

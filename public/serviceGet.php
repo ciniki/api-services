@@ -32,9 +32,9 @@ function ciniki_services_serviceGet($ciniki) {
     //  
 	ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'prepareArgs');
     $rc = ciniki_core_prepareArgs($ciniki, 'no', array(
-        'business_id'=>array('required'=>'yes', 'blank'=>'no', 'errmsg'=>'No business specified'), 
-        'service_id'=>array('required'=>'yes', 'blank'=>'no', 'errmsg'=>'No service specified'), 
-		'children'=>array('required'=>'no', 'blank'=>'no', 'errmsg'=>'No children requested'),
+        'business_id'=>array('required'=>'yes', 'blank'=>'no', 'name'=>'Business'), 
+        'service_id'=>array('required'=>'yes', 'blank'=>'no', 'name'=>'Service'), 
+		'children'=>array('required'=>'no', 'blank'=>'no', 'name'=>'Children'),
         )); 
     if( $rc['stat'] != 'ok' ) { 
         return $rc;
@@ -46,7 +46,7 @@ function ciniki_services_serviceGet($ciniki) {
     // check permission to run this function for this business
     //  
 	ciniki_core_loadMethod($ciniki, 'ciniki', 'services', 'private', 'checkAccess');
-    $rc = ciniki_services_checkAccess($ciniki, $args['business_id'], 'ciniki.services.serviceGet', $args['service_id']); 
+    $rc = ciniki_services_checkAccess($ciniki, $args['business_id'], 'ciniki.services.serviceGet', $args['service_id'], 0); 
     if( $rc['stat'] != 'ok' ) { 
         return $rc;
     }

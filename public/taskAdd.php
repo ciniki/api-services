@@ -27,13 +27,13 @@ function ciniki_services_taskAdd($ciniki) {
     //  
 	ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'prepareArgs');
     $rc = ciniki_core_prepareArgs($ciniki, 'no', array(
-        'business_id'=>array('required'=>'yes', 'blank'=>'no', 'errmsg'=>'No business specified'), 
-        'service_id'=>array('required'=>'yes', 'blank'=>'no', 'errmsg'=>'No service specified'), 
-		'step'=>array('required'=>'yes', 'blank'=>'no', 'errmsg'=>'No step specified'),
-		'name'=>array('required'=>'yes', 'blank'=>'no', 'errmsg'=>'No name specified'),
-        'description'=>array('required'=>'no', 'blank'=>'yes', 'default'=>'', 'errmsg'=>'No description specified'), 
-        'instructions'=>array('required'=>'no', 'blank'=>'yes', 'default'=>'', 'errmsg'=>'No instructions specified'), 
-        'duration'=>array('required'=>'no', 'blank'=>'yes', 'default'=>'0', 'errmsg'=>'No duration specified'), 
+        'business_id'=>array('required'=>'yes', 'blank'=>'no', 'name'=>'Business'), 
+        'service_id'=>array('required'=>'yes', 'blank'=>'no', 'name'=>'Service'), 
+		'step'=>array('required'=>'yes', 'blank'=>'no', 'name'=>'Step'),
+		'name'=>array('required'=>'yes', 'blank'=>'no', 'name'=>'Name'),
+        'description'=>array('required'=>'no', 'blank'=>'yes', 'default'=>'', 'name'=>'Description'), 
+        'instructions'=>array('required'=>'no', 'blank'=>'yes', 'default'=>'', 'name'=>'Instructions'), 
+        'duration'=>array('required'=>'no', 'blank'=>'yes', 'default'=>'0', 'name'=>'Duration'), 
         )); 
     if( $rc['stat'] != 'ok' ) { 
         return $rc;
@@ -45,7 +45,7 @@ function ciniki_services_taskAdd($ciniki) {
     // check permission to run this function for this business
     //  
 	ciniki_core_loadMethod($ciniki, 'ciniki', 'services', 'private', 'checkAccess');
-    $rc = ciniki_services_checkAccess($ciniki, $args['business_id'], 'ciniki.services.taskAdd', 0); 
+    $rc = ciniki_services_checkAccess($ciniki, $args['business_id'], 'ciniki.services.taskAdd', 0, 0); 
     if( $rc['stat'] != 'ok' ) { 
         return $rc;
     }
@@ -80,7 +80,7 @@ function ciniki_services_taskAdd($ciniki) {
 		. "";
 	$rc = ciniki_core_dbHashIDQuery($ciniki, $strsql, 'ciniki.services', 'tasks', 'step');
 	if( $rc['stat'] != 'ok' ) {
-		return array('stat'=>'fail', 'err'=>array('pkg'=>'ciniki', 'code'=>'844', 'msg'=>'Unable to check for existing step', 'err'=>$rc['err']));
+		return array('stat'=>'fail', 'err'=>array('pkg'=>'ciniki', 'code'=>'840', 'msg'=>'Unable to check for existing step', 'err'=>$rc['err']));
 	}
 	if( isset($rc['tasks']) && isset($rc['tasks'][$args['step']]) ) {
 		foreach($rc['tasks'] as $step => $task) {

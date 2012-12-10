@@ -11,20 +11,22 @@
 #
 # Fields
 # ------
-# id:			The ID assigned to the job task.
-# job_id:		The ID of the customer job in the ciniki_service_customer_jobs table.
-# task_id:		The ID of the task in the ciniki_service_tasks table.
-# step:			The step number for this task.  This information is copied 
-#				from the ciniki_service_tasks table when the job is first setup.
-# name:			The name of the step.  This information is copied 
-#				from the ciniki_service_tasks table when the job is first setup.
-# status:		The current status of the task:
+# id:				The ID assigned to the job task.
+# job_id:			The ID of the customer job in the ciniki_service_jobs table.
+# task_id:			The ID of the task in the ciniki_service_tasks table.
+# step:				The step number for this task.  This information is copied 
+#					from the ciniki_service_tasks table when the job is first setup.
+# name:				The name of the step.  This information is copied 
+#					from the ciniki_service_tasks table when the job is first setup.
+# duration:			The length of time the task should take.
+# status:			The current status of the task:
 #
-#				0 - unknown
-#				10 - started
-#				50 - skipped
-#				60 - completed
+#					0 - unknown
+#					10 - started
+#					50 - skipped
+#					60 - completed
 #
+# description:		The description for the step (optional).
 # date_scheduled:	The date and time the task is scheduled to be started on.
 # date_started:		The date and time the task was started.
 # date_due:			The date and time the task must be finished by.
@@ -32,13 +34,15 @@
 # date_added:		The UTC date and time the task was added to the table.
 # last_updated:		The UTC date and time the task was last updated.
 #
-create table ciniki_service_customer_job_tasks (
+create table ciniki_service_job_tasks (
 	id int not null auto_increment,
 	job_id int not null,
 	task_id int not null,
 	step tinyint unsigned not null,
 	name varchar(250) not null,
+	duration int not null,
 	status tinyint unsigned not null,
+	description varchar(6000) not null,
 	date_scheduled datetime not null,
 	date_started datetime not null,
 	date_due datetime not null,

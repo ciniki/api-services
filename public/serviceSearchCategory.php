@@ -22,9 +22,9 @@ function ciniki_services_serviceSearchCategory($ciniki) {
     //  
 	ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'prepareArgs');
     $rc = ciniki_core_prepareArgs($ciniki, 'no', array(
-        'business_id'=>array('required'=>'yes', 'blank'=>'no', 'errmsg'=>'No business specified'), 
-        'start_needle'=>array('required'=>'yes', 'blank'=>'yes', 'errmsg'=>'No search specified'), 
-        'limit'=>array('required'=>'no', 'blank'=>'no', 'errmsg'=>'No limit specified'), 
+        'business_id'=>array('required'=>'yes', 'blank'=>'no', 'name'=>'Business'), 
+        'start_needle'=>array('required'=>'yes', 'blank'=>'yes', 'name'=>'Search Word'), 
+        'limit'=>array('required'=>'no', 'blank'=>'no', 'name'=>'Limit'), 
         )); 
     if( $rc['stat'] != 'ok' ) { 
         return $rc;
@@ -35,8 +35,8 @@ function ciniki_services_serviceSearchCategory($ciniki) {
     // Make sure this module is activated, and
     // check permission to run this function for this business
     //  
-	ciniki_core_loadMethod($ciniki, 'ciniki', 'atdo', 'private', 'checkAccess');
-    $rc = ciniki_atdo_checkAccess($ciniki, $args['business_id'], 'ciniki.atdo.servicesSearchCategory', 0); 
+	ciniki_core_loadMethod($ciniki, 'ciniki', 'services', 'private', 'checkAccess');
+    $rc = ciniki_services_checkAccess($ciniki, $args['business_id'], 'ciniki.services.servicesSearchCategory', 0, 0); 
     if( $rc['stat'] != 'ok' ) { 
         return $rc;
     }   
@@ -60,7 +60,7 @@ function ciniki_services_serviceSearchCategory($ciniki) {
 		$strsql .= "LIMIT 15 ";
 	}
 	ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'dbHashQueryTree');
-	$rc = ciniki_core_dbHashQueryTree($ciniki, $strsql, 'ciniki.atdo', array(
+	$rc = ciniki_core_dbHashQueryTree($ciniki, $strsql, 'ciniki.services', array(
 		array('container'=>'categories', 'fname'=>'name', 'name'=>'category', 'fields'=>array('name')),
 		));
 	if( $rc['stat'] != 'ok' ) {

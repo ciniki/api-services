@@ -18,11 +18,14 @@
 //						10 - Tax Preparation
 //
 // status:				(optional) The new status for the service.
+//
+//						10 - started
+//						
 // duration:			(optional) The new duration for the service.
 // repeat_type:			(optional) The new type of repeat for the service.
 //
-//						10 - Daily
-//						20 - Weekly
+//						10 - Daily **future**
+//						20 - Weekly **future**
 //						30 - Monthly
 //						40 - Yearly
 //
@@ -41,19 +44,19 @@ function ciniki_services_serviceUpdate($ciniki) {
     //  
 	ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'prepareArgs');
     $rc = ciniki_core_prepareArgs($ciniki, 'no', array(
-		'business_id'=>array('required'=>'yes', 'blank'=>'no', 'errmsg'=>'No business specified'), 
-        'service_id'=>array('required'=>'yes', 'blank'=>'no', 'errmsg'=>'No ID specified'), 
-		'name'=>array('required'=>'no', 'blank'=>'no', 'errmsg'=>'No name specified'),
-        'category'=>array('required'=>'no', 'blank'=>'no', 'errmsg'=>'No category specified'), 
+		'business_id'=>array('required'=>'yes', 'blank'=>'no', 'name'=>'Business'), 
+        'service_id'=>array('required'=>'yes', 'blank'=>'no', 'name'=>'Service'), 
+		'name'=>array('required'=>'no', 'blank'=>'no', 'name'=>'Name'),
+        'category'=>array('required'=>'no', 'blank'=>'no', 'name'=>'Category'), 
 		'type'=>array('required'=>'no', 'blank'=>'no', 
-			'validlist'=>array('1', '10'), 'errmsg'=>'No type specified'),
-        'status'=>array('required'=>'no', 'blank'=>'no', 'errmsg'=>'No status specified'), 
-        'duration'=>array('required'=>'no', 'blank'=>'no', 'errmsg'=>'No duration specified'), 
+			'validlist'=>array('1', '10'), 'name'=>'Type'),
+        'status'=>array('required'=>'no', 'blank'=>'no', 'name'=>'Status'), 
+        'duration'=>array('required'=>'no', 'blank'=>'no', 'name'=>'Duration'), 
         'repeat_type'=>array('required'=>'no', 
-			'validlist'=>array('0', '10', '20', '30', '40'), 'errmsg'=>'No repeat specified'), 
-        'repeat_interval'=>array('required'=>'no', 'blank'=>'no', 'errmsg'=>'No repeat interval specified'), 
-        'due_after_days'=>array('required'=>'no', 'blank'=>'no', 'errmsg'=>'No due after days specified'), 
-        'due_after_months'=>array('required'=>'no', 'blank'=>'no', 'errmsg'=>'No due after months specified'), 
+			'validlist'=>array('0', '10', '20', '30', '40'), 'name'=>'Repeat Type'), 
+        'repeat_interval'=>array('required'=>'no', 'blank'=>'no', 'name'=>'Repeat Interval'), 
+        'due_after_days'=>array('required'=>'no', 'blank'=>'no', 'name'=>'Due After Days'), 
+        'due_after_months'=>array('required'=>'no', 'blank'=>'no', 'name'=>'Due After Months'), 
         )); 
     if( $rc['stat'] != 'ok' ) { 
         return $rc;
@@ -65,7 +68,7 @@ function ciniki_services_serviceUpdate($ciniki) {
     // check permission to run this function for this business
     //  
 	ciniki_core_loadMethod($ciniki, 'ciniki', 'services', 'private', 'checkAccess');
-    $rc = ciniki_services_checkAccess($ciniki, $args['business_id'], 'ciniki.services.serviceUpdate', $args['service_id']); 
+    $rc = ciniki_services_checkAccess($ciniki, $args['business_id'], 'ciniki.services.serviceUpdate', $args['service_id'], 0); 
     if( $rc['stat'] != 'ok' ) { 
         return $rc;
     }   

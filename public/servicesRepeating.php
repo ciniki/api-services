@@ -2,19 +2,13 @@
 //
 // Description
 // ===========
-// This method will return the list of services defined for a business.
+// This method will return the list of repeating/subscription services for a business.
 //
 // Arguments
 // ---------
 // api_key:
 // auth_token:
 // business_id:		The ID of the business to get the task list for.
-// status:			(optional) Only return services with this status.
-//
-//					10 - active
-//					60 - deleted
-//
-// limit:			(optional) The maximum number of services to return in the list.
 // 
 // Returns
 // -------
@@ -22,15 +16,13 @@
 // 		<service id="1" name="Service Name" />
 // </services>
 //
-function ciniki_services_servicesList($ciniki) {
+function ciniki_services_servicesRepeating($ciniki) {
     //  
     // Find all the required and optional arguments
     //  
 	ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'prepareArgs');
     $rc = ciniki_core_prepareArgs($ciniki, 'no', array(
         'business_id'=>array('required'=>'yes', 'blank'=>'no', 'name'=>'Business'), 
-        'status'=>array('required'=>'no', 'blank'=>'no', 'default'=>'10', 'name'=>'Status'), 
-		'limit'=>array('required'=>'no', 'blank'=>'no', 'name'=>'Limit'),
         )); 
     if( $rc['stat'] != 'ok' ) { 
         return $rc;
@@ -42,7 +34,7 @@ function ciniki_services_servicesList($ciniki) {
     // check permission to run this function for this business
     //  
 	ciniki_core_loadMethod($ciniki, 'ciniki', 'services', 'private', 'checkAccess');
-    $rc = ciniki_services_checkAccess($ciniki, $args['business_id'], 'ciniki.services.servicesList', 0, 0); 
+    $rc = ciniki_services_checkAccess($ciniki, $args['business_id'], 'ciniki.services.servicesRepeating', 0, 0); 
     if( $rc['stat'] != 'ok' ) { 
         return $rc;
     }
@@ -55,28 +47,21 @@ function ciniki_services_servicesList($ciniki) {
 		. "ciniki_services.repeat_type "
 		. "FROM ciniki_services "
 		. "WHERE ciniki_services.business_id = '" . ciniki_core_dbQuote($ciniki, $args['business_id']) . "' "
+		. "AND ciniki_services.repeat_type > 0 "
 		. "";
-	if( isset($args['status']) ) {
-		$strsql .= "AND ciniki_services.status = '" . ciniki_core_dbQuote($ciniki, $args['status']) . "' ";
-	}
 	$strsql .= "ORDER BY ciniki_services.category, ciniki_services.name "
 		. "";
-	if( isset($args['limit']) && $args['limit'] != '' && $args['limit'] > 0 ) {
-		$strsql .= "LIMIT " . ciniki_core_dbQuote($ciniki, $args['limit']) . " ";
-	}
 	ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'dbHashQueryTree');
 	$rc = ciniki_core_dbHashQueryTree($ciniki, $strsql, 'ciniki.services', array(
-		array('container'=>'categories', 'fname'=>'category', 'name'=>'category',
-			'fields'=>array('name'=>'category')),
 		array('container'=>'services', 'fname'=>'id', 'name'=>'service',
-			'fields'=>array('id', 'name', 'category', 'repeat_type')),
+			'fields'=>array('id', 'name')),
 		));
 	if( $rc['stat'] != 'ok' ) {
 		return $rc;
 	}
-	if( !isset($rc['categories']) ) {
-		return array('stat'=>'ok', 'categories'=>array());
+	if( !isset($rc['services']) ) {
+		return array('stat'=>'ok', 'services'=>array());
 	}
-	return array('stat'=>'ok', 'categories'=>$rc['categories']);
+	return array('stat'=>'ok', 'services'=>$rc['services']);
 }
 ?>

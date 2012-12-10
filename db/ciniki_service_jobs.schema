@@ -5,16 +5,26 @@
 #
 # Fields
 # ------
-# id:						The ID of the customer service job.
-# uuid:						The Universal Unique ID for this customer service job.
-# customer_id:				The ID of the customer.
+# id:						The ID of the service job.
+# uuid:						The Universal Unique ID for this service job.
+# business_id:				The ID of the business the job is attached to.
 # service_id:				The ID of the service to be performed.
+# customer_id:				The ID of the customer the job is for, or 0 if not assigned to a customer.
+# project_id:				The ID of the project the job is for, or 0 if not assigned to a project.
 # invoice_id:				The ID of the invoice the job was billed on.  This
 #							may be 0 if the service is not yet or will not be
 #							attached to an invoice.
 #
 # name:						The name/label given to this service.  Typically this
 #							will be the year or date of service.
+#
+# pstart_date:				The first day of the time period the job is for.  This
+#							is used to show what time period the job covered.  For 
+#							tax services, this will be the first day of the fiscal year.
+#
+# pend_date:				The last day of the time period which the job is for. For 
+#							tax services, this will be the last day of the fiscal year,
+#							or last day of the quarter.
 #
 # service_date:				The date the job was done, or the last day for the 
 #							period this job covers.  For tax services, this will
@@ -28,10 +38,16 @@
 # status:					The status of the job, if it's completed or not.
 #
 #							0 - unknown
-#							10 - started
-#							20 - pending (waiting for input)
-#							30 - working
+#							1 - missing (Should never exist in the database, used only when 
+#								returning job lists with missing entries.
+#							2 - upcoming (Should never exist in the database, used only 
+#								when sending projections back in API).
+#							10 - entered
+#							20 - started
+#							30 - pending (waiting for input)
+#							40 - working
 #							60 - completed
+#							61 - skipped
 #
 # date_scheduled:			The date and time the job is scheduled to be started on.
 # date_started:				The date and time the job was started.
@@ -41,13 +57,17 @@
 # date_added:				The UTC date and time the job was added.
 # last_updated:				The UTC date and time the job was last changed.
 #
-create table ciniki_service_customer_jobs (
+create table ciniki_service_jobs (
 	id int not null auto_increment,
 	uuid char(36) not null,
-	customer_id int not null,
+	business_id int not null,
 	service_id int not null,
+	customer_id int not null,
+	project_id int not null,
 	invoice_id int not null,
 	name varchar(100) not null,
+	pstart_date datetime not null,
+	pend_date datetime not null,
 	service_date datetime not null,
 	status tinyint unsigned not null,
 	date_scheduled datetime not null,

@@ -19,8 +19,8 @@
 // duration:			(optional) The length of time in minutes the service should take to complete.
 // repeat_type:			(optional) If the service is repeatable, how should it repeat.
 //
-//						10 - Daily
-//						20 - Weekly
+//						10 - Daily **future**
+//						20 - Weekly **future**
 //						30 - Monthly
 //						40 - Yearly
 //
@@ -41,18 +41,18 @@ function ciniki_services_serviceAdd($ciniki) {
     //  
 	ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'prepareArgs');
     $rc = ciniki_core_prepareArgs($ciniki, 'no', array(
-        'business_id'=>array('required'=>'yes', 'blank'=>'no', 'errmsg'=>'No business specified'), 
-		'type'=>array('required'=>'yes', 'blank'=>'no', 
-			'validlist'=>array('1', '10'), 'errmsg'=>'No type specified'),
-		'name'=>array('required'=>'yes', 'blank'=>'no', 'errmsg'=>'No name specified'),
-        'category'=>array('required'=>'no', 'blank'=>'yes', 'default'=>'', 'errmsg'=>'No category specified'), 
-		'status'=>array('required'=>'no', 'blank'=>'no', 'default'=>'10', 'errmsg'=>'No status specified'),
-        'duration'=>array('required'=>'no', 'default'=>'0', 'blank'=>'yes', 'errmsg'=>'No duration specified'), 
-        'repeat_type'=>array('required'=>'no', 'default'=>'0', 'blank'=>'yes', 
-			'validlist'=>array('0', '10', '20', '30', '40'), 'errmsg'=>'No repeat specified'), 
-        'repeat_interval'=>array('required'=>'no', 'default'=>'1', 'blank'=>'yes', 'errmsg'=>'No repeat interval specified'), 
-        'due_after_days'=>array('required'=>'no', 'default'=>'0', 'blank'=>'yes', 'errmsg'=>'No due after days specified'), 
-        'due_after_months'=>array('required'=>'no', 'default'=>'0', 'blank'=>'yes', 'errmsg'=>'No due after months specified'), 
+        'business_id'=>array('required'=>'yes', 'blank'=>'no', 'name'=>'Business'), 
+		'type'=>array('required'=>'yes', 'blank'=>'no', 'name'=>'Type', 
+			'validlist'=>array('1', '10')),
+		'name'=>array('required'=>'yes', 'blank'=>'no', 'name'=>'Name'),
+        'category'=>array('required'=>'no', 'blank'=>'yes', 'default'=>'', 'name'=>'Category'), 
+		'status'=>array('required'=>'no', 'blank'=>'no', 'default'=>'10', 'name'=>'Status'),
+        'duration'=>array('required'=>'no', 'default'=>'0', 'blank'=>'yes', 'name'=>'Duration'), 
+        'repeat_type'=>array('required'=>'no', 'default'=>'0', 'blank'=>'yes', 'name'=>'Repeat Type', 
+			'validlist'=>array('0', '10', '20', '30', '40')), 
+        'repeat_interval'=>array('required'=>'no', 'default'=>'1', 'blank'=>'yes', 'name'=>'Repeat Interval'), 
+        'due_after_days'=>array('required'=>'no', 'default'=>'0', 'blank'=>'yes', 'name'=>'Due After Days'), 
+        'due_after_months'=>array('required'=>'no', 'default'=>'0', 'blank'=>'yes', 'name'=>'Due After Months'), 
         )); 
     if( $rc['stat'] != 'ok' ) { 
         return $rc;
@@ -64,7 +64,7 @@ function ciniki_services_serviceAdd($ciniki) {
     // check permission to run this function for this business
     //  
 	ciniki_core_loadMethod($ciniki, 'ciniki', 'services', 'private', 'checkAccess');
-    $rc = ciniki_services_checkAccess($ciniki, $args['business_id'], 'ciniki.services.serviceAdd', 0); 
+    $rc = ciniki_services_checkAccess($ciniki, $args['business_id'], 'ciniki.services.serviceAdd', 0, 0); 
     if( $rc['stat'] != 'ok' ) { 
         return $rc;
     }   
@@ -131,10 +131,9 @@ function ciniki_services_serviceAdd($ciniki) {
 		'due_after_months',
 		);
 	foreach($changelog_fields as $field) {
-		$insert_name = $field;
 		if( isset($args[$field]) && $args[$field] != '' ) {
 			$rc = ciniki_core_dbAddModuleHistory($ciniki, 'ciniki.services', 'ciniki_service_history', 
-				$args['business_id'], 1, 'ciniki_services', $service_id, $name, $args[$field]);
+				$args['business_id'], 1, 'ciniki_services', $service_id, $field, $args[$field]);
 		}
 	}
 

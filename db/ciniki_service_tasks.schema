@@ -12,7 +12,7 @@
 # name:				The name of the step.
 # description:		The description for the step (optional).
 # instructions:		The instructions for the step (optional).
-# duration:			The length of time the task will take.
+# duration:			The length of time the task should take.
 # billable_hours:	The number of hours billed for this task.
 # date_added:		The UTC date and time the task was added.
 # last_updated:		The UTC date and time the task was last changed.
