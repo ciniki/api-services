@@ -126,7 +126,7 @@ function ciniki_services_jobUpdate($ciniki) {
 	//
 	if( isset($args['note']) && $args['note'] != '' ) {
 		ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'threadAddFollowup');
-		$rc = ciniki_core_threadAddFollowup($ciniki, $module, 'ciniki_service_job_notes', 'job', $args['job_id'], array(
+		$rc = ciniki_core_threadAddFollowup($ciniki, 'ciniki.services', 'ciniki_service_job_notes', 'job', $args['job_id'], array(
 			'user_id'=>$ciniki['session']['user']['id'],
 			'job_id'=>$args['job_id'],
 			'content'=>$args['note'],
