@@ -136,7 +136,7 @@ function ciniki_services_customerSubscriptions($ciniki) {
 		}
 		ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'dbHashQueryTree');
 		$rc = ciniki_core_dbHashQueryTree($ciniki, $strsql, 'ciniki.services', array(
-			array('container'=>'subscriptions', 'fname'=>'service_id', 'name'=>'service',
+			array('container'=>'subscriptions', 'fname'=>'id', 'name'=>'service',
 				'fields'=>array('id', 'service_id', 'name', 'status', 'date_started', 'date_ended', 
 					'repeat_type', 'repeat_interval', 'raw_date_started', 'raw_date_ended', 'due_after_days', 'due_after_months')),
 			array('container'=>'jobs', 'fname'=>'job_id', 'name'=>'job',
@@ -294,9 +294,9 @@ function ciniki_services_customerSubscriptions($ciniki) {
 					}
 					array_push($jobs, array('job'=>array('id'=>'0', 'name'=>$name, 'status'=>$status, 'status_text'=>$status_text, 
 						'utc_service_date'=>$cur_pend_date->getTimestamp(), 
-						'pstart_date'=>date_format($cur_pstart_date, "M d, Y"), 'pend_date'=>date_format($cur_pend_date, "M d, Y"),
-						'service_date'=>date_format($cur_pend_date, "M d, Y"),
-						'date_scheduled'=>'', 'date_started'=>'', 'date_due'=>date_format($due_date, 'M d, Y'), 'date_completed'=>'')));
+						'pstart_date'=>date_format($cur_pstart_date, "M j, Y"), 'pend_date'=>date_format($cur_pend_date, "M j, Y"),
+						'service_date'=>date_format($cur_pend_date, "M j, Y"),
+						'date_scheduled'=>'', 'date_started'=>'', 'date_due'=>date_format($due_date, 'M j, Y'), 'date_completed'=>'')));
 				}
 				//
 				// Advance the year

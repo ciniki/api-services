@@ -32,13 +32,22 @@ function ciniki_services_serviceStats($ciniki) {
     }   
     $args = $rc['args'];
 
-	$start_date = new DateTime('Dec 1, 2012');
-	$end_date = new DateTime('Nov 30, 2013');
-	$interval = $start_date->diff($end_date);
-	$num_months = $interval->format('%m') + 1;
-//	print "start: " . $start_date->format('Y-m-d') . "\n";
-//	print "end: " . $end_date->format('Y-m-d') . "\n";
-//	print "diff: " . $interval->format('%m months') . "\n";
+	if( isset($args['start_date']) ) {
+		$pstart_date = new DateTime($args['start_date']);
+	} else {
+		$pstart_date = new DateTime();
+		$pstart_date->modify('first day of this month');
+	}
+	if( isset($args['start_date']) ) {
+		$pend_date = new DateTime($args['end_date']);
+	} else {
+		$pend_date = clone $pstart_date;
+		$pend_date->modify("+1 year");
+		$pend_date->modify("-1 day");
+	}
+
+	$interval = $pstart_date->diff($pend_date);
+	$num_months = ($interval->format('%Y') * 12) + $interval->format('%m') + 1;
 
     
     //  
@@ -55,22 +64,23 @@ function ciniki_services_serviceStats($ciniki) {
 	$strsql = "SELECT COUNT(ciniki_service_subscriptions.service_id) AS num_jobs, "
 		. "ciniki_services.id, ciniki_services.name, repeat_type, repeat_interval, "
 		. "ciniki_services.due_after_months, "
-		. "((CASE repeat_type WHEN 40 THEN 12 WHEN 30 THEN repeat_interval END) "
-			. "- (period_diff('201212', date_format(date_started-interval 1 day, '%Y%m'))+(12-due_after_months)) "
-			. "mod CASE repeat_type WHEN 40 THEN 12 WHEN 30 THEN repeat_interval END) AS offset "
+		. "CASE repeat_type WHEN 40 THEN 12 WHEN 30 THEN repeat_interval END AS repeat_period, "
+		. "((PERIOD_DIFF('" . ciniki_core_dbQuote($ciniki, $pstart_date->format('Ym')) . "', DATE_FORMAT(date_started-INTERVAL 1 DAY, '%Y%m'))-due_after_months) "
+			. "MOD CASE repeat_type WHEN 40 THEN 12 WHEN 30 THEN repeat_interval END) AS offset "
 		. "FROM ciniki_services "
 		. "LEFT JOIN ciniki_service_subscriptions ON (ciniki_services.id = ciniki_service_subscriptions.service_id) "
-		. "GROUP BY service_id, offset "
+		. "GROUP BY ciniki_services.id, offset "
 		. "";
 	ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'dbHashQueryTree');
 	$rc = ciniki_core_dbHashQueryTree($ciniki, $strsql, 'ciniki.services', array(
 		array('container'=>'services', 'fname'=>'id', 'name'=>'service',
-			'fields'=>array('id', 'name', 'due_after_months', 'repeat_type', 'repeat_interval')),
+			'fields'=>array('id', 'name', 'due_after_months', 'repeat_type', 'repeat_interval', 'repeat_period')),
 		array('container'=>'jobs', 'fname'=>'offset', 'name'=>'jobcount',
 			'fields'=>array('offset', 'num_jobs')),
 		));
+	error_log($strsql);
 	if( $rc['stat'] != 'ok' ) {
-		return $rc;
+		return array('stat'=>'fail', 'err'=>array('pkg'=>'ciniki', 'code'=>'871', 'msg'=>'Unable to find services', 'err'=>$rc['err']));
 	}
 	if( !isset($rc['services']) ) {
 		return array('stat'=>'ok', 'services'=>array());
@@ -79,8 +89,9 @@ function ciniki_services_serviceStats($ciniki) {
 	$services = $rc['services'];
 	foreach($services as $sid => $service) {
 		$service = $service['service'];
+		$services[$sid]['service']['max_jobs'] = 0;
 		$services[$sid]['service']['months'] = array();
-		$cur_month = clone $start_date;
+		$cur_month = clone $pstart_date;
 		for($i=0;$i<$num_months;$i++) {
 			$services[$sid]['service']['months'][$i] = array('month'=>array(
 				'id'=>$cur_month->format('Ym'),
@@ -89,11 +100,8 @@ function ciniki_services_serviceStats($ciniki) {
 				));
 			$cur_month->modify("+1 month");
 		}
-		$cur_month = clone $start_date;
-		$repeat = $service['repeat_interval'];
-		if( $service['repeat_type'] == 40 ) {
-			$repeat = $repeat * 12;
-		}
+		$cur_month = clone $pstart_date;
+		$repeat = $service['repeat_period'];
 		//
 		// Go through all the jobs for this service, which should be a maximum of 12.  This
 		// will list the number of jobs at each month offset.  The month offset, is the number
@@ -103,12 +111,20 @@ function ciniki_services_serviceStats($ciniki) {
 		if( isset($service['jobs']) ) {
 			foreach($service['jobs'] as $jid => $jobcount) {
 				$jobcount = $jobcount['jobcount'];
-				$month_offset = $jobcount['offset'];
+				$month_offset = 0;
+				if( $jobcount['offset'] > 0 ) {
+					$month_offset = $service['repeat_period']-$jobcount['offset'];
+				} else {
+					$month_offset = $jobcount['offset'];
+				}
 				//
 				// Keep checking for month offsets, until no more are found
 				//
 				while(isset($services[$sid]['service']['months'][$month_offset]) ) {
 					$services[$sid]['service']['months'][$month_offset]['month']['total_jobs'] = $jobcount['num_jobs'];
+					if( $jobcount['num_jobs'] > $services[$sid]['service']['max_jobs'] ) {
+						$services[$sid]['service']['max_jobs'] = $jobcount['num_jobs'];
+					}
 					$month_offset+=$repeat;
 				}
 			}
@@ -118,7 +134,58 @@ function ciniki_services_serviceStats($ciniki) {
 		}
 	}
 
-//	print_r($rc['services']);
+	//
+	// Get the existing jobs from the database for the period specified
+	//
+	$strsql = "SELECT ciniki_service_jobs.service_id, COUNT(ciniki_service_jobs.id) AS num_jobs, ciniki_service_jobs.status, "
+		. "PERIOD_DIFF(DATE_FORMAT(date_due, '%Y%m'), '" . ciniki_core_dbQuote($ciniki, $pstart_date->format('Ym')) . "') AS offset, "
+		. "CONCAT_WS('-', ciniki_service_jobs.status, PERIOD_DIFF(DATE_FORMAT(date_due, '%Y%m'), '" . ciniki_core_dbQuote($ciniki, $pstart_date->format('Ym')) . "')) AS groupid "
+		. "FROM ciniki_service_jobs "
+		. "WHERE ciniki_service_jobs.business_id = '" . ciniki_core_dbQuote($ciniki, $args['business_id']) . "' "
+		. "AND ciniki_service_jobs.date_due >= '" . ciniki_core_dbQuote($ciniki, $pstart_date->format('Y-m-d')) . "' "
+		. "AND ciniki_service_jobs.date_due <= '" . ciniki_core_dbQuote($ciniki, $pend_date->format('Y-m-d')) . "' "
+		. "GROUP BY ciniki_service_jobs.service_id, ciniki_service_jobs.status, offset "
+		. "";
+	$rc = ciniki_core_dbHashQueryTree($ciniki, $strsql, 'ciniki.services', array(
+		array('container'=>'services', 'fname'=>'service_id', 'name'=>'service',
+			'fields'=>array('service_id')),
+		array('container'=>'jobs', 'fname'=>'groupid', 'name'=>'jobcount',
+			'fields'=>array('status', 'offset', 'num_jobs')),
+		));
+	if( $rc['stat'] != 'ok' ) {
+		return array('stat'=>'fail', 'err'=>array('pkg'=>'ciniki', 'code'=>'872', 'msg'=>'Unable to find jobs', 'err'=>$rc['err']));
+	}
+	if( isset($rc['services']) ) {
+		//
+		// Go through the results and add the job counts for status to the
+		// services array
+		//
+		foreach($rc['services'] as $sid => $jobservice) {
+			$jobservice = $jobservice['service'];
+			// Find the service for the current job count result
+			foreach($services as $sid => $service) {
+				if( $service['service']['id'] == $jobservice['service_id'] ) {
+					foreach($jobservice['jobs'] as $jid => $job) {
+						switch($job['jobcount']['status']) {
+							case 10: $services[$sid]['service']['months'][$job['jobcount']['offset']]['month']['jobs_entered'] = $job['jobcount']['num_jobs'];
+								break;
+							case 20: $services[$sid]['service']['months'][$job['jobcount']['offset']]['month']['jobs_started'] = $job['jobcount']['num_jobs'];
+								break;
+							case 30: $services[$sid]['service']['months'][$job['jobcount']['offset']]['month']['jobs_pending'] = $job['jobcount']['num_jobs'];
+								break;
+							case 40: $services[$sid]['service']['months'][$job['jobcount']['offset']]['month']['jobs_working'] = $job['jobcount']['num_jobs'];
+								break;
+							case 60: $services[$sid]['service']['months'][$job['jobcount']['offset']]['month']['jobs_completed'] = $job['jobcount']['num_jobs'];
+								break;
+							case 61: $services[$sid]['service']['months'][$job['jobcount']['offset']]['month']['jobs_skipped'] = $job['jobcount']['num_jobs'];
+								break;
+						}
+					}
+				}
+			}
+
+		}
+	}
 
 	return array('stat'=>'ok', 'services'=>$services);
 }

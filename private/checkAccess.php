@@ -72,6 +72,7 @@ function ciniki_services_checkAccess($ciniki, $business_id, $method, $req_id, $r
 		if( $method == 'ciniki.services.serviceUpdate'
 			|| $method == 'ciniki.services.serviceGet' 
 			|| $method == 'ciniki.services.serviceHistory' 
+			|| $method == 'ciniki.services.serviceJobs' 
 			|| $method == 'ciniki.services.subscriptionAdd'
 			|| $method == 'ciniki.services.jobAdd' ) {
 			//
