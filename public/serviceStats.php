@@ -49,7 +49,6 @@ function ciniki_services_serviceStats($ciniki) {
 	$interval = $pstart_date->diff($pend_date);
 	$num_months = ($interval->format('%Y') * 12) + $interval->format('%m') + 1;
 
-    
     //  
     // Make sure this module is activated, and
     // check permission to run this function for this business
@@ -78,7 +77,6 @@ function ciniki_services_serviceStats($ciniki) {
 		array('container'=>'jobs', 'fname'=>'offset', 'name'=>'jobcount',
 			'fields'=>array('offset', 'num_jobs')),
 		));
-	error_log($strsql);
 	if( $rc['stat'] != 'ok' ) {
 		return array('stat'=>'fail', 'err'=>array('pkg'=>'ciniki', 'code'=>'871', 'msg'=>'Unable to find services', 'err'=>$rc['err']));
 	}

@@ -17,7 +17,7 @@
 // 
 // Returns
 // -------
-// <job id="1" name="2012 Q1" service_name="HST">
+// <job id="1" tracking_id="M43" name="2012 Q1" service_name="HST">
 //		<tasks>
 //			<task id="23" step="1" name="The first step" duration="60" />
 //		</tasks>
@@ -64,7 +64,7 @@ function ciniki_services_jobGet($ciniki) {
 	//
 	// Get the job information
 	//
-	$strsql = "SELECT ciniki_service_jobs.id, ciniki_service_jobs.name, "
+	$strsql = "SELECT ciniki_service_jobs.id, ciniki_service_jobs.tracking_id, ciniki_service_jobs.name, "
 		. "DATE_FORMAT(ciniki_service_jobs.pstart_date, '" . ciniki_core_dbQuote($ciniki, $date_format) . "') AS pstart_date, "
 		. "DATE_FORMAT(ciniki_service_jobs.pend_date, '" . ciniki_core_dbQuote($ciniki, $date_format) . "') AS pend_date, "
 		. "DATE_FORMAT(ciniki_service_jobs.service_date, '" . ciniki_core_dbQuote($ciniki, $date_format) . "') AS service_date, "
@@ -73,6 +73,7 @@ function ciniki_services_jobGet($ciniki) {
 		. "DATE_FORMAT(ciniki_service_jobs.date_started, '" . ciniki_core_dbQuote($ciniki, $date_format) . "') AS date_started, "
 		. "DATE_FORMAT(ciniki_service_jobs.date_due, '" . ciniki_core_dbQuote($ciniki, $date_format) . "') AS date_due, "
 		. "DATE_FORMAT(ciniki_service_jobs.date_completed, '" . ciniki_core_dbQuote($ciniki, $date_format) . "') AS date_completed, "
+		. "DATE_FORMAT(ciniki_service_jobs.date_signedoff, '" . ciniki_core_dbQuote($ciniki, $date_format) . "') AS date_signedoff, "
 		. "ciniki_services.name AS service_name, "
 		. "DATE_FORMAT(CONVERT_TZ(ciniki_service_jobs.date_added, '+00:00', '" . ciniki_core_dbQuote($ciniki, $utc_offset) . "'), '" . ciniki_core_dbQuote($ciniki, $datetime_format) . "') AS date_added, "
 		. "DATE_FORMAT(CONVERT_TZ(ciniki_service_jobs.last_updated, '+00:00', '" . ciniki_core_dbQuote($ciniki, $utc_offset) . "'), '" . ciniki_core_dbQuote($ciniki, $datetime_format) . "') AS last_updated "
@@ -85,7 +86,7 @@ function ciniki_services_jobGet($ciniki) {
 	ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'dbHashQueryTree');
 	$rc = ciniki_core_dbHashQueryTree($ciniki, $strsql, 'ciniki.services', array(
 		array('container'=>'jobs', 'fname'=>'id', 'name'=>'job',
-			'fields'=>array('id', 'name', 'service_date', 'status', 'service_name',
+			'fields'=>array('id', 'tracking_id', 'name', 'service_date', 'status', 'service_name',
 				'pstart_date', 'pend_date', 
 				'date_scheduled', 'date_started', 'date_due', 'date_completed', 
 				'date_added', 'last_updated')),
@@ -119,7 +120,7 @@ function ciniki_services_jobGet($ciniki) {
 				'fields'=>array('id', 'task_id', 'step', 'name', 'duration', 'status', 'status_text',
 					'date_scheduled', 'date_started', 'date_due', 'date_completed', 
 					'date_added', 'last_updated'),
-				'maps'=>array('status_text'=>array('10'=>'entered', '20'=>'started', '60'=>'completed', '61'=>'skipped')),
+				'maps'=>array('status_text'=>array('10'=>'entered', '20'=>'started', '50'=>'completed', '60'=>'signed off', '61'=>'skipped')),
 				),
 			));
 		if( $rc['stat'] != 'ok' ) {

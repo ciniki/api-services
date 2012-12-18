@@ -41,7 +41,8 @@ function ciniki_services_jobHistory($ciniki) {
 		|| $args['field'] == 'date_scheduled'
 		|| $args['field'] == 'date_started'
 		|| $args['field'] == 'date_due'
-		|| $args['field'] == 'date_completed' ) {
+		|| $args['field'] == 'date_completed' 
+		|| $args['field'] == 'date_signedoff' ) {
 		ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'dbGetModuleHistoryReformat');
 		return ciniki_core_dbGetModuleHistoryReformat($ciniki, 'ciniki.services', 'ciniki_service_history', 
 			$args['business_id'], 'ciniki_service_jobs', $args['job_id'], $args['field'], 'date');

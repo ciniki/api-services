@@ -11,13 +11,14 @@
 // business_id:			The ID of the business to add the service to.
 // service_id:			The ID of the service to add.
 // customer_id:			The ID of the customer to add the service to.
+// tracking_id:			(optional) The tracking ID of the job, used only for the business, not internal.
 // status:				(optional) The status for the service, defaults to 10.
 //	
 //						10 - entered (default)
 //						20 - started
 //						30 - pending
-//						40 - working
-//						60 - completed
+//						50 - completed
+//						60 - signed off
 //						61 - skipped
 //
 // name:				The name for this job, typically the year or some portion of the date.
@@ -45,16 +46,18 @@ function ciniki_services_jobAdd($ciniki) {
         'business_id'=>array('required'=>'yes', 'blank'=>'no', 'name'=>'Business'), 
 		'service_id'=>array('required'=>'yes', 'blank'=>'no', 'name'=>'Service'),
 		'customer_id'=>array('required'=>'yes', 'blank'=>'no', 'name'=>'Customer'),
+		'tracking_id'=>array('required'=>'no', 'blank'=>'yes', 'name'=>'Tracking ID'),
 		'status'=>array('required'=>'no', 'blank'=>'no', 'default'=>'10', 'name'=>'Status',
-			'validlist'=>array('10','20','30','40','60','61')),
+			'validlist'=>array('10','20','30','50', '60','61')),
 		'name'=>array('required'=>'yes', 'blank'=>'no', 'name'=>'Name'),
-		'pstart_date'=>array('required'=>'yes', 'blank'=>'no', 'type'=>'date', 'name'=>'Start Date'),
-		'pend_date'=>array('required'=>'yes', 'blank'=>'no', 'type'=>'date', 'name'=>'End Date'),
-		'service_date'=>array('required'=>'yes', 'blank'=>'no', 'type'=>'date', 'name'=>'Service Date'),
+		'pstart_date'=>array('required'=>'no', 'blank'=>'no', 'type'=>'date', 'name'=>'Start Date'),
+		'pend_date'=>array('required'=>'no', 'blank'=>'no', 'type'=>'date', 'name'=>'End Date'),
+		'service_date'=>array('required'=>'no', 'blank'=>'no', 'type'=>'date', 'default'=>'', 'name'=>'Service Date'),
 		'date_scheduled'=>array('required'=>'no', 'blank'=>'yes', 'type'=>'date', 'default'=>'', 'name'=>'Date Scheduled'),
 		'date_started'=>array('required'=>'no', 'blank'=>'yes', 'type'=>'date', 'default'=>'', 'name'=>'Date Started'),
 		'date_due'=>array('required'=>'no', 'blank'=>'yes', 'type'=>'date', 'default'=>'', 'name'=>'Date Due'),
 		'date_completed'=>array('required'=>'no', 'blank'=>'yes', 'type'=>'date', 'default'=>'', 'name'=>'Date Completed'),
+		'date_signedoff'=>array('required'=>'no', 'blank'=>'yes', 'type'=>'date', 'default'=>'', 'name'=>'Date Signed Off'),
 		'note'=>array('required'=>'no', 'blank'=>'yes', 'name'=>'Note'),
         )); 
     if( $rc['stat'] != 'ok' ) { 
@@ -90,14 +93,15 @@ function ciniki_services_jobAdd($ciniki) {
 	// Add the service to the database
 	//
 	$strsql = "INSERT INTO ciniki_service_jobs (uuid, business_id, "
-		. "service_id, customer_id, name, service_date, status, "
+		. "service_id, customer_id, tracking_id, name, service_date, status, "
 		. "pstart_date, pend_date, "
-		. "date_scheduled, date_started, date_due, date_completed, "
+		. "date_scheduled, date_started, date_due, date_completed, date_signedoff, "
 		. "date_added, last_updated) VALUES ("
 		. "UUID(), "
 		. "'" . ciniki_core_dbQuote($ciniki, $args['business_id']) . "', "
 		. "'" . ciniki_core_dbQuote($ciniki, $args['service_id']) . "', "
 		. "'" . ciniki_core_dbQuote($ciniki, $args['customer_id']) . "', "
+		. "'" . ciniki_core_dbQuote($ciniki, $args['tracking_id']) . "', "
 		. "'" . ciniki_core_dbQuote($ciniki, $args['name']) . "', "
 		. "'" . ciniki_core_dbQuote($ciniki, $args['service_date']) . "', "
 		. "'" . ciniki_core_dbQuote($ciniki, $args['status']) . "', "
@@ -107,6 +111,7 @@ function ciniki_services_jobAdd($ciniki) {
 		. "'" . ciniki_core_dbQuote($ciniki, $args['date_started']) . "', "
 		. "'" . ciniki_core_dbQuote($ciniki, $args['date_due']) . "', "
 		. "'" . ciniki_core_dbQuote($ciniki, $args['date_completed']) . "', "
+		. "'" . ciniki_core_dbQuote($ciniki, $args['date_signedoff']) . "', "
 		. "UTC_TIMESTAMP(), UTC_TIMESTAMP())"
 		. "";
 	$rc = ciniki_core_dbInsert($ciniki, $strsql, 'ciniki.services');
@@ -126,6 +131,7 @@ function ciniki_services_jobAdd($ciniki) {
 	$changelog_fields = array(
 		'service_id',
 		'customer_id',
+		'tracking_id',
 		'name',
 		'pstart_date',
 		'pend_date',
@@ -135,6 +141,7 @@ function ciniki_services_jobAdd($ciniki) {
 		'date_started',
 		'date_due',
 		'date_completed',
+		'date_signedoff',
 		);
 	foreach($changelog_fields as $field) {
 		if( isset($args[$field]) && $args[$field] != '' ) {

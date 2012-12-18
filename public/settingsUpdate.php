@@ -55,14 +55,16 @@ function ciniki_services_settingsUpdate($ciniki) {
 	// The list of allowed fields for updating
 	//
 	$changelog_fields = array(
-		'services-job-status-1-colour',
-		'services-job-status-2-colour',
-		'services-job-status-10-colour',
-		'services-job-status-20-colour',
-		'services-job-status-30-colour',
-		'services-job-status-40-colour',
-		'services-job-status-60-colour',
-		'services-job-status-61-colour',
+		'use-tracking-id',
+		'job-status-1-colour',
+		'job-status-2-colour',
+		'job-status-10-colour',
+		'job-status-20-colour',
+		'job-status-30-colour',
+		'job-status-40-colour',
+		'job-status-50-colour',
+		'job-status-60-colour',
+		'job-status-61-colour',
 		);
 	//
 	// Check each valid setting and see if a new value was passed in the arguments for it.

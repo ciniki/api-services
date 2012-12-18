@@ -10,13 +10,14 @@
 // auth_token:
 // business_id:			The ID of the business the service belongs to.
 // job_id:				The ID of the service to update.
+// tracking_id:			(optional) The new tracking ID for the job.
 // status:				(optional) The new status for the service, defaults to 10.
 //	
 //						10 - entered (default)
 //						20 - started
 //						30 - pending
-//						40 - working
-//						60 - completed
+//						50 - completed
+//						60 - signedoff
 //						61 - skipped
 //
 // name:				(optional) The new name for this job, typically the year or some portion of the date.
@@ -27,6 +28,7 @@
 // date_started:		(optional) The new date the job was started.
 // date_due:			(optional) The new date the job is due to be finished by.
 // date_completed:		(optional) The new date the job was completed on.
+// date_signedoff:		(optional) The new date the job was signed off on.
 //
 // note:				(optional) A note to attach to the thread of notes.
 // 
@@ -42,8 +44,9 @@ function ciniki_services_jobUpdate($ciniki) {
     $rc = ciniki_core_prepareArgs($ciniki, 'no', array(
 		'business_id'=>array('required'=>'yes', 'blank'=>'no', 'name'=>'Business'), 
         'job_id'=>array('required'=>'yes', 'blank'=>'no', 'name'=>'Job'), 
+        'tracking_id'=>array('required'=>'no', 'blank'=>'yes', 'name'=>'Tracking ID'), 
 		'status'=>array('required'=>'no', 'blank'=>'no', 'name'=>'Status',
-			'validlist'=>array('10','20','30','40','60','61')),
+			'validlist'=>array('10','20','30','50','60','61')),
 		'name'=>array('required'=>'no', 'blank'=>'no', 'name'=>'Name'),
 		'pstart_date'=>array('required'=>'no', 'blank'=>'no', 'type'=>'date', 'name'=>'Start Date'),
 		'pend_date'=>array('required'=>'no', 'blank'=>'no', 'type'=>'date', 'name'=>'End Date'),
@@ -52,6 +55,7 @@ function ciniki_services_jobUpdate($ciniki) {
 		'date_started'=>array('required'=>'no', 'blank'=>'yes', 'type'=>'date', 'name'=>'Date Started'),
 		'date_due'=>array('required'=>'no', 'blank'=>'yes', 'type'=>'date', 'name'=>'Date Due'),
 		'date_completed'=>array('required'=>'no', 'blank'=>'yes', 'type'=>'date', 'name'=>'Date Completed'),
+		'date_signedoff'=>array('required'=>'no', 'blank'=>'yes', 'type'=>'date', 'name'=>'Date Signed Off'),
 		'note'=>array('required'=>'no', 'blank'=>'yes', 'name'=>'Note'),
         )); 
     if( $rc['stat'] != 'ok' ) { 
@@ -92,6 +96,7 @@ function ciniki_services_jobUpdate($ciniki) {
 	// Add all the fields to the change log
 	//
 	$changelog_fields = array(
+		'tracking_id',
 		'name',
 		'pstart_date',
 		'pend_date',
@@ -101,6 +106,7 @@ function ciniki_services_jobUpdate($ciniki) {
 		'date_started',
 		'date_due',
 		'date_completed',
+		'date_signedoff',
 		);
 	foreach($changelog_fields as $field) {
 		if( isset($args[$field]) ) {

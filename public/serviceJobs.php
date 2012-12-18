@@ -77,6 +77,13 @@ function ciniki_services_serviceJobs($ciniki) {
 	$date_format = ciniki_users_dateFormat($ciniki);
 
 	//
+	// Load the list of status messages for this business
+	//
+	ciniki_core_loadMethod($ciniki, 'ciniki', 'services', 'private', 'statusList');
+	$rc = ciniki_services_statusList($ciniki, $args['business_id']);
+	$status_texts = $rc['list'];
+
+	//
 	// Check if year and month are for a future month
 	//
 	$default_status = 1; // Missing
@@ -148,7 +155,7 @@ function ciniki_services_serviceJobs($ciniki) {
 				'year_offset', 'period_months', 'due_after_months', 'quarter',
 				'subscription_date_started', 'repeat_type', 'repeat_interval',
 				'pstart_date', 'pend_date', 'date_due', 'service_date'),
-			'maps'=>array('status_text'=>array('1'=>'missing', '2'=>'upcoming', '10'=>'entered', '20'=>'started', '30'=>'pending', '40'=>'working', '60'=>'completed', '61'=>'skipped')),
+			'maps'=>array('status_text'=>$status_texts),
 			)
 		));
 	if( $rc['stat'] != 'ok' ) {	
@@ -188,7 +195,7 @@ function ciniki_services_serviceJobs($ciniki) {
 		$due_date = clone $pstart_date;
 		$due_date->modify('+' . ($job['period_months']+$job['due_after_months']) . ' months - 1 day');
 
-		$jobs[$jid]['job']['service_date'] = $pend_date->format('M j, Y');
+//		$jobs[$jid]['job']['service_date'] = $pend_date->format('M j, Y');
 		$jobs[$jid]['job']['date_due'] = $due_date->format('M j, Y');
 	}
 

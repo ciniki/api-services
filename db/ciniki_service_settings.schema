@@ -4,14 +4,18 @@
 # This table is used to store the setting for the services module for a business.
 #
 # Some examples:
-# - services-job-status-1 - #ffddff (missing)
-# - services-job-status-2 - #ffddff (upcoming)
-# - services-job-status-10 - #ffddff (entered)
-# - services-job-status-20 - #ffddff (started)
-# - services-job-status-30 - #ffddff (pending)
-# - services-job-status-40 - #ffddff (working)
-# - services-job-status-60 - #ffddff (completed)
-# - services-job-status-61 - #ffddff (skipped)
+# - job-status-1-colour - #ffddff (missing)
+# - job-status-2-colour - #ffddff (upcoming)
+# - job-status-10-colour - #ffddff (entered)
+# - job-status-20-colour - #ffddff (started)
+# - job-status-30-colour - #ffddff (pending)
+# - job-status-40-colour - #ffddff (working)
+# - job-status-50-colour - #ffddff (completed)
+# - job-status-60-colour - #ffddff (signedoff)
+# - job-status-61-colour - #ffddff (skipped)
+#
+# Specify if the tracking id field should be used
+# - use-tracking-id - (yes|no)
 #
 # Fields
 # ------
