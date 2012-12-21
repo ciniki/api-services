@@ -63,17 +63,22 @@ function ciniki_services_serviceStats($ciniki) {
 	$strsql = "SELECT COUNT(ciniki_service_subscriptions.service_id) AS num_jobs, "
 		. "ciniki_services.id, ciniki_services.name, repeat_type, repeat_interval, "
 		. "ciniki_services.due_after_months, "
+		// Get the number of months this subscription should go for
+		. "PERIOD_DIFF(DATE_FORMAT(date_ended, '%Y%m'),'" . ciniki_core_dbQuote($ciniki, $pstart_date->format('Ym')) . "') AS num_months_left, "
 		. "CASE repeat_type WHEN 40 THEN 12 WHEN 30 THEN repeat_interval END AS repeat_period, "
 		. "((PERIOD_DIFF('" . ciniki_core_dbQuote($ciniki, $pstart_date->format('Ym')) . "', DATE_FORMAT(date_started-INTERVAL 1 DAY, '%Y%m'))-due_after_months) "
 			. "MOD CASE repeat_type WHEN 40 THEN 12 WHEN 30 THEN repeat_interval END) AS offset "
 		. "FROM ciniki_services "
 		. "LEFT JOIN ciniki_service_subscriptions ON (ciniki_services.id = ciniki_service_subscriptions.service_id) "
+		// Check if the subscription has ended and nothing due after first month of stats
+		. "WHERE (ciniki_service_subscriptions.date_ended = 0 "
+			. " OR PERIOD_DIFF('" . ciniki_core_dbQuote($ciniki, $pstart_date->format('Ym')) . "', DATE_FORMAT(ciniki_service_subscriptions.date_ended, '%Y%m')) < due_after_months ) "
 		. "GROUP BY ciniki_services.id, offset "
 		. "";
 	ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'dbHashQueryTree');
 	$rc = ciniki_core_dbHashQueryTree($ciniki, $strsql, 'ciniki.services', array(
 		array('container'=>'services', 'fname'=>'id', 'name'=>'service',
-			'fields'=>array('id', 'name', 'due_after_months', 'repeat_type', 'repeat_interval', 'repeat_period')),
+			'fields'=>array('id', 'name', 'due_after_months', 'repeat_type', 'repeat_interval', 'repeat_period', 'num_months_left')),
 		array('container'=>'jobs', 'fname'=>'offset', 'name'=>'jobcount',
 			'fields'=>array('offset', 'num_jobs')),
 		));
@@ -119,6 +124,11 @@ function ciniki_services_serviceStats($ciniki) {
 				// Keep checking for month offsets, until no more are found
 				//
 				while(isset($services[$sid]['service']['months'][$month_offset]) ) {
+					if( $service['num_months_left'] > 0 && $month_offset > ($service['num_months_left']+$service['due_after_months']) ) {
+					// FIXME: This is broken, need a way to figure out how many subscriptions end this month
+//						error_log($service['name'] . ' - break - ' . $service['num_months_left'] . ' - ' . $month_offset);
+//						break;
+					}
 					$services[$sid]['service']['months'][$month_offset]['month']['total_jobs'] = $jobcount['num_jobs'];
 					if( $jobcount['num_jobs'] > $services[$sid]['service']['max_jobs'] ) {
 						$services[$sid]['service']['max_jobs'] = $jobcount['num_jobs'];

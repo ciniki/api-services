@@ -8,6 +8,7 @@
 # id:						The ID of the service job.
 # uuid:						The Universal Unique ID for this service job.
 # business_id:				The ID of the business the job is attached to.
+# subscription_id:			The ID of the subscription the job is attached to in ciniki_service_subscriptions.
 # service_id:				The ID of the service to be performed.
 # customer_id:				The ID of the customer the job is for, or 0 if not assigned to a customer.
 # project_id:				The ID of the project the job is for, or 0 if not assigned to a project.
@@ -67,6 +68,7 @@ create table ciniki_service_jobs (
 	id int not null auto_increment,
 	uuid char(36) not null,
 	business_id int not null,
+	subscription_id int not null,
 	service_id int not null,
 	customer_id int not null,
 	project_id int not null,
@@ -85,5 +87,5 @@ create table ciniki_service_jobs (
 	date_added datetime not null,
 	last_updated datetime not null,
 	primary key (id),
-	index (customer_id, service_id)
+	index (subscription_id, service_id, customer_id)
 ) ENGINE='InnoDB', COMMENT='v1.01';

@@ -124,7 +124,7 @@ function ciniki_services_customerSubscriptions($ciniki) {
 			. "FROM ciniki_service_subscriptions "
 			. "LEFT JOIN ciniki_services ON (ciniki_service_subscriptions.service_id = ciniki_services.id "
 				. "AND ciniki_services.business_id = '" . ciniki_core_dbQuote($ciniki, $args['business_id']) . "') "
-			. "LEFT JOIN ciniki_service_jobs ON (ciniki_service_subscriptions.service_id = ciniki_service_jobs.service_id "
+			. "LEFT JOIN ciniki_service_jobs ON (ciniki_service_subscriptions.id = ciniki_service_jobs.subscription_id "
 				. "AND ciniki_service_subscriptions.customer_id = ciniki_service_jobs.customer_id ) "
 			. "WHERE ciniki_service_subscriptions.business_id = '" . ciniki_core_dbQuote($ciniki, $args['business_id']) . "' "
 			. "AND ciniki_service_subscriptions.customer_id = '" . ciniki_core_dbQuote($ciniki, $args['customer_id']) . "' ";
@@ -139,7 +139,7 @@ function ciniki_services_customerSubscriptions($ciniki) {
 		}
 		ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'dbHashQueryTree');
 		$rc = ciniki_core_dbHashQueryTree($ciniki, $strsql, 'ciniki.services', array(
-			array('container'=>'subscriptions', 'fname'=>'id', 'name'=>'service',
+			array('container'=>'subscriptions', 'fname'=>'id', 'name'=>'subscription',
 				'fields'=>array('id', 'service_id', 'name', 'status', 'date_started', 'date_ended', 
 					'repeat_type', 'repeat_interval', 'raw_date_started', 'raw_date_ended', 'due_after_days', 'due_after_months')),
 			array('container'=>'jobs', 'fname'=>'job_id', 'name'=>'job',
@@ -166,12 +166,24 @@ function ciniki_services_customerSubscriptions($ciniki) {
 		// Fill in the missing jobs
 		//
 		foreach($subscriptions as $sid => $service) {
-			$service = $service['service'];
+			$service = $service['subscription'];
 			$date_started = date_create($service['raw_date_started']);
 			$date_ended = date_create($service['raw_date_ended']);
 			$end_date = 0;
 			if( $date_started->getTimestamp() > 0 && $date_ended->getTimestamp() > $date_started->getTimestamp() ) {
 				$end_date = date_create($service['raw_date_ended']);
+				// Add the due_after_months, this is used when subscription has an end date
+				if( $service['due_after_months'] > 0 ) {
+					$end_date->modify('+' . $service['due_after_months'] . ' month');
+					// if it starts at 1st of month, it should end on last day of month, check for rollover
+					if( $date_started->format('j') == 1 && $end_date->format('j') < 5 ) {
+						$end_date->modify('last day of previous month');
+					}
+					// Check if end is last day of month
+					elseif( $date_ended->format('t') == $date_ended->format('j') && $end_date->format('t') != $end_date->format('j') ) {
+						$end_date->modify('last day of this month');
+					}
+				}
 			} elseif( isset($args['projections']) && $args['projections'] != '' ) {
 				$end_date = date_create("now");
 				$end_date = date_add($end_date, new DateInterval($args['projections']));
@@ -202,7 +214,7 @@ function ciniki_services_customerSubscriptions($ciniki) {
 			if( isset($service['jobs']) ) {
 				foreach($service['jobs'] as $jid => $job) {
 					// Setup utc_pend_date
-					$subscriptions[$sid]['service']['jobs'][$jid]['job']['utc_pend_date'] = date_format(date_create($job['job']['raw_pend_date']), 'U');
+					$subscriptions[$sid]['subscription']['jobs'][$jid]['job']['utc_pend_date'] = date_format(date_create($job['job']['raw_pend_date']), 'U');
 				}
 			}
 
@@ -235,7 +247,7 @@ function ciniki_services_customerSubscriptions($ciniki) {
 				$exists = 0;
 				if( isset($service['jobs']) ) {
 					foreach($service['jobs'] as $jid => $job) {
-						if( $subscriptions[$sid]['service']['jobs'][$jid]['job']['utc_pend_date'] == $utc_pend_date ) {
+						if( $subscriptions[$sid]['subscription']['jobs'][$jid]['job']['utc_pend_date'] == $utc_pend_date ) {
 							$exists = 1;
 							break;
 						}
@@ -312,10 +324,10 @@ function ciniki_services_customerSubscriptions($ciniki) {
 			//
 			// Merge added jobs and database jobs
 			//
-			if( !isset($subscriptions[$sid]['service']['jobs']) ) {
-				$subscriptions[$sid]['service']['jobs'] = $jobs;
+			if( !isset($subscriptions[$sid]['subscription']['jobs']) ) {
+				$subscriptions[$sid]['subscription']['jobs'] = $jobs;
 			} else {
-				$subscriptions[$sid]['service']['jobs'] = array_merge($subscriptions[$sid]['service']['jobs'], $jobs);
+				$subscriptions[$sid]['subscription']['jobs'] = array_merge($subscriptions[$sid]['subscription']['jobs'], $jobs);
 			}
 
 			//
@@ -325,14 +337,14 @@ function ciniki_services_customerSubscriptions($ciniki) {
 			//
 			if( count($jobs) > 0 ) {
 				if( isset($args['jobsort']) && $args['jobsort'] == 'DESC' ) {
-					usort($subscriptions[$sid]['service']['jobs'], function($a, $b) {
+					usort($subscriptions[$sid]['subscription']['jobs'], function($a, $b) {
 						if( $a['job']['utc_pend_date'] == $b['job']['utc_pend_date'] ) {
 							return 0;
 						}
 						return $a['job']['utc_pend_date'] > $b['job']['utc_pend_date'] ? -1 : 1;
 					});
 				} else {
-					usort($subscriptions[$sid]['service']['jobs'], function($a, $b) {
+					usort($subscriptions[$sid]['subscription']['jobs'], function($a, $b) {
 						if( $a['job']['utc_pend_date'] == $b['job']['utc_pend_date'] ) {
 							return 0;
 						}

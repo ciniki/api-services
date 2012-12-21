@@ -132,7 +132,7 @@ function ciniki_services_serviceJobs($ciniki) {
 		. "IFNULL(DATE_FORMAT(ciniki_service_subscriptions.date_started, '" . ciniki_core_dbQuote($ciniki, $date_format) . "'), '') AS subscription_date_started, "
 		. "ciniki_services.repeat_type, ciniki_services.repeat_interval "
 		. "FROM ciniki_service_subscriptions "
-		. "LEFT JOIN ciniki_service_jobs ON (ciniki_service_subscriptions.service_id = ciniki_service_jobs.service_id "
+		. "LEFT JOIN ciniki_service_jobs ON (ciniki_service_subscriptions.id = ciniki_service_jobs.subscription_id "
 			. "AND ciniki_service_subscriptions.customer_id = ciniki_service_jobs.customer_id "
 			. "AND ciniki_service_jobs.business_id = '" . ciniki_core_dbQuote($ciniki, $args['business_id']) . "' "
 			. "AND DATE_FORMAT(ciniki_service_jobs.date_due, '%Y%m') = '" . ciniki_core_dbQuote($ciniki, sprintf("%04d%02d", $args['year'], $args['month'])) . "' "
@@ -147,11 +147,13 @@ function ciniki_services_serviceJobs($ciniki) {
 		. "AND ciniki_service_subscriptions.service_id = '" . ciniki_core_dbQuote($ciniki, $args['service_id']) . "' "
 		. "AND ((PERIOD_DIFF('" . ciniki_core_dbQuote($ciniki, sprintf("%04d%02d", $args['year'], $args['month'])) . "', DATE_FORMAT(ciniki_service_subscriptions.date_started-INTERVAL 1 DAY, '%Y%m'))-due_after_months) "
 			. "MOD CASE repeat_type WHEN 40 THEN 12 WHEN 30 THEN repeat_interval END) = 0 "
+		. "AND (ciniki_service_subscriptions.date_ended = 0 "
+			. " OR PERIOD_DIFF('" . ciniki_core_dbQuote($ciniki, sprintf("%04d%02d", $args['year'], $args['month'])) . "', DATE_FORMAT(ciniki_service_subscriptions.date_ended, '%Y%m')) <= due_after_months ) "
 		. "ORDER BY ciniki_service_jobs.status ";
 	ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'dbHashQueryTree');
 	$rc = ciniki_core_dbHashQueryTree($ciniki, $strsql, 'ciniki.services', array(
 		array('container'=>'jobs', 'fname'=>'id', 'name'=>'job',
-			'fields'=>array('id'=>'job_id', 'name', 'status', 'status_text', 'service_id', 'customer_id', 'customer_type', 'customer_name', 'company', 
+			'fields'=>array('id'=>'job_id', 'subscription_id'=>'id', 'name', 'status', 'status_text', 'service_id', 'customer_id', 'customer_type', 'customer_name', 'company', 
 				'year_offset', 'period_months', 'due_after_months', 'quarter',
 				'subscription_date_started', 'repeat_type', 'repeat_interval',
 				'pstart_date', 'pend_date', 'date_due', 'service_date'),

@@ -37,12 +37,20 @@ function ciniki_services_jobsList($ciniki) {
 	ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'prepareArgs');
     $rc = ciniki_core_prepareArgs($ciniki, 'no', array(
         'business_id'=>array('required'=>'yes', 'blank'=>'no', 'name'=>'Business'), 
-        'status_list'=>array('required'=>'yes', 'blank'=>'no', 'type'=>'idlist', 'name'=>'Status List'), 
+        'type'=>array('required'=>'no', 'blank'=>'no', 'validlist'=>array('pastdue'), 'name'=>'Type'), 
+        'status_list'=>array('required'=>'no', 'blank'=>'no', 'type'=>'idlist', 'name'=>'Status List'), 
         )); 
     if( $rc['stat'] != 'ok' ) { 
         return $rc;
     }   
     $args = $rc['args'];
+
+	//
+	// Must have type or status_list defined
+	//
+	if( !isset($args['type']) && !isset($args['status_list']) ) {
+		return array('stat'=>'fail', 'err'=>array('pkg'=>'ciniki', 'code'=>'874', 'msg'=>'Must specify a type or status list.'));
+	}
     
     //  
     // Make sure this module is activated, and
@@ -73,6 +81,16 @@ function ciniki_services_jobsList($ciniki) {
 	$rc = ciniki_services_statusList($ciniki, $args['business_id']);
 	$status_texts = $rc['list'];
 
+    //
+	// Get the types of customers available for this business
+	//
+	ciniki_core_loadMethod($ciniki, 'ciniki', 'customers', 'private', 'getCustomerTypes');
+	$rc = ciniki_customers_getCustomerTypes($ciniki, $args['business_id']);
+	if( $rc['stat'] != 'ok' ) {
+		return $rc;
+	}
+	$types = $rc['types'];
+
 	$strsql = "SELECT ciniki_service_jobs.id, "
 		. "ciniki_service_jobs.tracking_id, "
 		. "ciniki_services.id AS service_id, "
@@ -87,21 +105,47 @@ function ciniki_services_jobsList($ciniki) {
 		. "IFNULL(DATE_FORMAT(ciniki_service_jobs.date_due, '" . ciniki_core_dbQuote($ciniki, $date_format) . "'), '') AS date_due, "
 		. "IFNULL(DATE_FORMAT(ciniki_service_jobs.date_completed, '" . ciniki_core_dbQuote($ciniki, $date_format) . "'), '') AS date_completed, "
 		. "IFNULL(DATE_FORMAT(ciniki_service_jobs.date_completed, '" . ciniki_core_dbQuote($ciniki, $date_format) . "'), '') AS date_signedoff, "
-		. "ciniki_customers.id AS customer_id, ciniki_customers.type AS customer_type, "
-		. "CONCAT_WS(' ', first, last) AS customer_name, ciniki_customers.company "
-		. "FROM ciniki_service_jobs "
+		. "ciniki_customers.id AS customer_id, "
+		. "";
+	if( count($types) > 0 ) {
+		// If there are customer types defined, choose the right name for the customer
+		// This is required here to be able to sort properly
+		$strsql .= "CASE ciniki_customers.type ";
+		foreach($types as $tid => $type) {
+			$strsql .= "WHEN " . ciniki_core_dbQuote($ciniki, $tid) . " THEN ";
+			if( $type['detail_value'] == 'business' ) {
+				$strsql .= " ciniki_customers.company ";
+			} else {
+				$strsql .= "CONCAT_WS(' ', first, last) ";
+			}
+		}
+		$strsql .= "ELSE CONCAT_WS(' ', first, last) END AS customer_name ";
+	} else {
+		// Default to a person
+		$strsql .= "CONCAT_WS(' ', first, last) AS customer_name ";
+	}
+	$strsql .= "FROM ciniki_service_jobs "
 		. "LEFT JOIN ciniki_services ON (ciniki_service_jobs.service_id = ciniki_services.id "
 			. "AND ciniki_services.business_id = '" . ciniki_core_dbQuote($ciniki, $args['business_id']) . "') "
 		. "LEFT JOIN ciniki_customers ON (ciniki_service_jobs.customer_id = ciniki_customers.id "
 			. "AND ciniki_customers.business_id = '" . ciniki_core_dbQuote($ciniki, $args['business_id']) . "') "
 		. "WHERE ciniki_service_jobs.business_id = '" . ciniki_core_dbQuote($ciniki, $args['business_id']) . "' "
-		. "AND ciniki_service_jobs.status IN (" . ciniki_core_dbQuoteIDs($ciniki, $args['status_list']) . ") "
-		. "ORDER BY ciniki_service_jobs.status "
+		. "";
+	if( isset($args['type']) && $args['type'] == 'pastdue' ) {
+		$strsql .= "AND ciniki_service_jobs.status < 60 "
+			. "AND ciniki_service_jobs.date_due < CURDATE() "
+			. "";
+	} elseif( isset($args['status_list']) ) {
+		$strsql .= "AND ciniki_service_jobs.status IN (" . ciniki_core_dbQuoteIDs($ciniki, $args['status_list']) . ") ";
+	} else {
+		return array('stat'=>'fail', 'err'=>array('pkg'=>'ciniki', 'code'=>'875', 'msg'=>'Must specify a type or status list.'));
+	}
+	$strsql .= "ORDER BY ciniki_service_jobs.status, customer_name, ciniki_service_jobs.date_due "
 		. "";
 	ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'dbHashQueryTree');
 	$rc = ciniki_core_dbHashQueryTree($ciniki, $strsql, 'ciniki.services', array(
 		array('container'=>'jobs', 'fname'=>'id', 'name'=>'job',
-			'fields'=>array('id'=>'id', 'customer_id', 'customer_type', 'customer_name', 'company',
+			'fields'=>array('id'=>'id', 'customer_id', 'customer_name', 
 				'service_name', 'name', 'status', 'status_text', 
 				'pstart_date', 'pend_date', 
 				'date_scheduled', 'date_started', 'date_due', 'date_completed', 'date_signedoff'),

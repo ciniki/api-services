@@ -11,6 +11,7 @@
 // business_id:			The ID of the business to add the service to.
 // service_id:			The ID of the service to add.
 // customer_id:			The ID of the customer to add the service to.
+// subscription_id:		(optional) The subscription ID of the job, if it is associated with a service subscription.
 // tracking_id:			(optional) The tracking ID of the job, used only for the business, not internal.
 // status:				(optional) The status for the service, defaults to 10.
 //	
@@ -46,6 +47,7 @@ function ciniki_services_jobAdd($ciniki) {
         'business_id'=>array('required'=>'yes', 'blank'=>'no', 'name'=>'Business'), 
 		'service_id'=>array('required'=>'yes', 'blank'=>'no', 'name'=>'Service'),
 		'customer_id'=>array('required'=>'yes', 'blank'=>'no', 'name'=>'Customer'),
+		'subscription_id'=>array('required'=>'no', 'blank'=>'no', 'default'=>'0', 'name'=>'Subscription'),
 		'tracking_id'=>array('required'=>'no', 'blank'=>'yes', 'name'=>'Tracking ID'),
 		'status'=>array('required'=>'no', 'blank'=>'no', 'default'=>'10', 'name'=>'Status',
 			'validlist'=>array('10','20','30','50', '60','61')),
@@ -73,7 +75,25 @@ function ciniki_services_jobAdd($ciniki) {
     $rc = ciniki_services_checkAccess($ciniki, $args['business_id'], 'ciniki.services.jobAdd', $args['service_id'], $args['customer_id']); 
     if( $rc['stat'] != 'ok' ) { 
         return $rc;
-    }   
+    }
+
+	//
+	// Check if subscription belongs to business
+	//
+	if( isset($args['subscription_id']) && $args['subscription_id'] > 0 ) {
+		$strsql = "SELECT ciniki_service_subscriptions.id "
+			. "FROM ciniki_service_subscriptions "
+			. "WHERE ciniki_service_subscriptions.id = '" . ciniki_core_dbQuote($ciniki, $args['subscription_id']) . "' "
+			. "AND ciniki_service_subscriptions.business_id = '" . ciniki_core_dbQuote($ciniki, $args['business_id']) . "' "
+			. "";
+		$rc = ciniki_core_dbHashQuery($ciniki, $strsql, 'ciniki.services', 'subscription');
+		if( $rc['stat'] != 'ok' ) {
+			return $rc;
+		}
+		if( !isset($rc['subscription']) || $rc['subscription']['id'] != $args['subscription_id'] ) {
+			return array('stat'=>'fail', 'err'=>array('pkg'=>'ciniki', 'code'=>'876', 'msg'=>'Invalid subscription'));
+		}
+	}
 
 	//  
 	// Turn off autocommit
@@ -90,15 +110,16 @@ function ciniki_services_jobAdd($ciniki) {
 	}   
 
 	//
-	// Add the service to the database
+	// Add the job to the database
 	//
-	$strsql = "INSERT INTO ciniki_service_jobs (uuid, business_id, "
+	$strsql = "INSERT INTO ciniki_service_jobs (uuid, business_id, subscription_id, "
 		. "service_id, customer_id, tracking_id, name, service_date, status, "
 		. "pstart_date, pend_date, "
 		. "date_scheduled, date_started, date_due, date_completed, date_signedoff, "
 		. "date_added, last_updated) VALUES ("
 		. "UUID(), "
 		. "'" . ciniki_core_dbQuote($ciniki, $args['business_id']) . "', "
+		. "'" . ciniki_core_dbQuote($ciniki, $args['subscription_id']) . "', "
 		. "'" . ciniki_core_dbQuote($ciniki, $args['service_id']) . "', "
 		. "'" . ciniki_core_dbQuote($ciniki, $args['customer_id']) . "', "
 		. "'" . ciniki_core_dbQuote($ciniki, $args['tracking_id']) . "', "
@@ -129,6 +150,7 @@ function ciniki_services_jobAdd($ciniki) {
 	// Add all the fields to the change log
 	//
 	$changelog_fields = array(
+		'subscription_id',
 		'service_id',
 		'customer_id',
 		'tracking_id',
@@ -181,7 +203,7 @@ function ciniki_services_jobAdd($ciniki) {
 		$rc = ciniki_core_dbInsert($ciniki, $strsql, 'ciniki.services');
 		if( $rc['stat'] != 'ok' ) {
 			ciniki_core_dbTransactionRollback($ciniki, 'ciniki.services');
-			return array('stat'=>'fail', 'err'=>array('pkg'=>'ciniki', 'code'=>'861', 'msg'=>'Unable to add service', 'err'=>$rc['err']));
+			return array('stat'=>'fail', 'err'=>array('pkg'=>'ciniki', 'code'=>'861', 'msg'=>'Unable to add job', 'err'=>$rc['err']));
 		}
 		$task_id = $rc['insert_id'];
 		$rc = ciniki_core_dbAddModuleHistory($ciniki, 'ciniki.services', 'ciniki_service_history', 

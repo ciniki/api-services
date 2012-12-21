@@ -111,6 +111,6 @@ function ciniki_services_subscriptionUpdate($ciniki) {
 	ciniki_core_loadMethod($ciniki, 'ciniki', 'businesses', 'private', 'updateModuleChangeDate');
 	ciniki_businesses_updateModuleChangeDate($ciniki, $args['business_id'], 'ciniki', 'services');
 
-	return array('stat'=>'ok', 'id'=>$subscription_id);
+	return array('stat'=>'ok');
 }
 ?>

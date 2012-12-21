@@ -31,7 +31,7 @@ function ciniki_services_taskUpdate($ciniki) {
 		'business_id'=>array('required'=>'yes', 'blank'=>'no', 'name'=>'Business'), 
         'task_id'=>array('required'=>'yes', 'blank'=>'no', 'name'=>'Task'), 
 		'step'=>array('required'=>'no', 'blank'=>'no', 'name'=>'Step'),
-        'name'=>array('required'=>'no', 'blank'=>'no', 'name'=>'Name 
+        'name'=>array('required'=>'no', 'blank'=>'no', 'name'=>'Name'),
         'description'=>array('required'=>'no', 'blank'=>'no', 'name'=>'Description'), 
         'instructions'=>array('required'=>'no', 'blank'=>'no', 'name'=>'Instructions'), 
         'duration'=>array('required'=>'no', 'blank'=>'no', 'name'=>'Duration'), 
