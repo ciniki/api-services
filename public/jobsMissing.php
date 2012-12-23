@@ -141,6 +141,7 @@ function ciniki_services_jobsMissing($ciniki) {
 		. "ciniki_service_subscriptions.date_started AS raw_date_started, "
 		. "ciniki_service_subscriptions.date_ended AS raw_date_ended, "
 		. "ciniki_service_subscriptions.customer_id, "
+		. "ciniki_customers.type AS customer_type, "
 		. "";
 	if( count($types) > 0 ) {
 		// If there are customer types defined, choose the right name for the customer
@@ -200,7 +201,7 @@ function ciniki_services_jobsMissing($ciniki) {
 	ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'dbHashQueryTree');
 	$rc = ciniki_core_dbHashQueryTree($ciniki, $strsql, 'ciniki.services', array(
 		array('container'=>'subscriptions', 'fname'=>'id', 'name'=>'subscription',
-			'fields'=>array('id', 'customer_id', 'customer_type', 'customer_name', 'company', 
+			'fields'=>array('id', 'customer_id', 'customer_type', 'customer_name',
 				'service_id', 'service_name', 'date_started', 'date_ended', 
 				'repeat_type', 'repeat_interval', 'raw_date_started', 'raw_date_ended', 'due_after_days', 'due_after_months')),
 		array('container'=>'jobs', 'fname'=>'job_id', 'name'=>'job',
@@ -346,7 +347,7 @@ function ciniki_services_jobsMissing($ciniki) {
 					'service_id'=>$service['service_id'], 
 					'service_name'=>$service['service_name'], 'name'=>$name, 
 					'customer_id'=>$service['customer_id'], 'customer_type'=>$service['customer_type'],
-					'customer_name'=>$service['customer_name'], 'company'=>$service['company'],
+					'customer_name'=>$service['customer_name'], 
 					'status'=>$status, 'status_text'=>$status_text, 
 					'utc_pend_date'=>$cur_pend_date->getTimestamp(), 
 					'pstart_date'=>date_format($cur_pstart_date, "M j, Y"), 'pend_date'=>date_format($cur_pend_date, "M j, Y"),
