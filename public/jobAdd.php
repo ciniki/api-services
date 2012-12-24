@@ -23,13 +23,14 @@
 //						61 - skipped
 //
 // name:				The name for this job, typically the year or some portion of the date.
-// pstart_date:			The date of the first day of the time period the job covers.
-// pend_date:			The date of the last day of the time period the job covers.
-// service_date:		The date of the job, or the last day of the time period the job covers.
+// pstart_date:			(optional) The date of the first day of the time period the job covers.
+// pend_date:			(optional) The date of the last day of the time period the job covers.
+// service_date:		(optional) The date of the job, or the last day of the time period the job covers.
 // date_scheduled:		(optional) The date the job is scheduled for.
 // date_started:		(optional) The date the job was started.
 // date_due:			(optional) The date the job is due to be finished by.
 // date_completed:		(optional) The date the job was completed on.
+// date_signedoff:		(optional) The date the job was signed off.
 //
 // note:				(optional) A note to attach to the thread of notes.
 //

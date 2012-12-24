@@ -3,7 +3,7 @@
 // Description
 // ===========
 // This method will return the list of jobs which are missing from
-// subscriptions and have not yet been setup in the system.
+// subscriptions and have not yet been setup in the system.  
 //
 // Arguments
 // ---------
@@ -11,25 +11,6 @@
 // auth_token:
 // business_id:		The ID of the business to get the task list for.
 //
-// subscription_id:	(optional) The ID of the subscription to get.  If not specified,
-//					all subscriptions for a customer will be returned.
-//
-// jobs:			(optional) Specify if the return should include
-//					all jobs for each service, or just the list of services.
-//
-// projections:		(optional) How far ahead to project the jobs for.  This
-//					will be used to return future/upcoming jobs.  The format
-//					should be the PHP dateInterval format.
-//					
-//					P1Y - project ahead 1 year
-//					P4M	- project ahead 4 months
-//
-// jobsort:			(optional) This can specify how to return the jobs sorted, either
-//					ascending or descending.
-//
-//					ASC - (default) return the job list with oldest first.
-//					DESC - return the job list with newest first.
-// 
 // Returns
 // -------
 //	<jobs>
@@ -104,32 +85,6 @@ function ciniki_services_jobsMissing($ciniki) {
 		return $rc;
 	}
 	$types = $rc['types'];
-
-//	$strsql = "SELECT ciniki_service_subscriptions.id, "
-//		. "ciniki_service_subscriptions.date_started, "
-//		. "ciniki_service_subscriptions.date_ended, "
-//		. "ciniki_service_subscriptions.customer_id, "
-//		. "ciniki_service_subscriptions.service_id, "
-//		. "ciniki_services.name AS service_name, "
-//		. "ciniki_services.repeat_type, "
-//		. "ciniki_services.repeat_interval, "
-//		. "ciniki_services.due_after_days, ciniki_services.due_after_months, "
-//		. "((PERIOD_DIFF("
-//			. "IF(ciniki_service_subscriptions.date_ended>ciniki_service_subscriptions.date_started, "
-//				. "DATE_FORMAT(ciniki_service_subscriptions.date_ended+INTERVAL due_after_months MONTH, '%Y%m'), "
-//				. "'" . ciniki_core_dbQuote($ciniki, sprintf("%04d%02d", $args['year'], $args['month'])) . "'), "
-//			. "DATE_FORMAT(ciniki_service_subscriptions.date_started-INTERVAL 1 DAY, '%Y%m'))-due_after_months) "
-//			. "DIV CASE repeat_type WHEN 40 THEN 12 WHEN 30 THEN repeat_interval END) AS required_jobs, "
-//		. "COUNT(ciniki_service_jobs.id) AS existing_jobs "
-//		. "FROM ciniki_service_subscriptions "
-//		. "LEFT JOIN ciniki_services ON (ciniki_service_subscriptions.service_id = ciniki_services.id "
-//			. "AND ciniki_services.business_id = '" . ciniki_core_dbQuote($ciniki, $args['business_id']) . "') "
-//		. "LEFT JOIN ciniki_service_jobs ON (ciniki_service_subscriptions.id = ciniki_service_jobs.subscription_id "
-//			. "AND ciniki_service_subscriptions.customer_id = ciniki_service_jobs.customer_id ) "
-//		. "WHERE ciniki_service_subscriptions.service_id = ciniki_services.id "
-//		. "GROUP BY ciniki_service_subscriptions.id "
-//		. "HAVING required_jobs > existing_jobs "
-//		. "";
 
 	//
 	// Build the SQL string to get the list of subscriptions with missing jobs,
@@ -213,9 +168,6 @@ function ciniki_services_jobsMissing($ciniki) {
 		return $rc;
 	} 
 	if( !isset($rc['subscriptions']) ) {
-		if( isset($args['subscription_id']) && $args['subscription_id'] != '' ) {
-			return array('stat'=>'fail', 'err'=>array('pkg'=>'ciniki', 'code'=>'850', 'msg'=>'Unable to find subscription'));
-		}
 		return array('stat'=>'ok', 'subscriptions'=>array());
 	}
 	$subscriptions = $rc['subscriptions'];
@@ -243,9 +195,9 @@ function ciniki_services_jobsMissing($ciniki) {
 					$end_date->modify('last day of this month');
 				}
 			}
-		} elseif( isset($args['projections']) && $args['projections'] != '' ) {
-			$end_date = date_create("now");
-			$end_date = date_add($end_date, new DateInterval($args['projections']));
+//		} elseif( isset($args['projections']) && $args['projections'] != '' ) {
+//			$end_date = date_create("now");
+//			$end_date = date_add($end_date, new DateInterval($args['projections']));
 		} else {
 			$end_date = date_create("now");
 		}
@@ -351,7 +303,6 @@ function ciniki_services_jobsMissing($ciniki) {
 					'status'=>$status, 'status_text'=>$status_text, 
 					'utc_pend_date'=>$cur_pend_date->getTimestamp(), 
 					'pstart_date'=>date_format($cur_pstart_date, "M j, Y"), 'pend_date'=>date_format($cur_pend_date, "M j, Y"),
-//						'service_date'=>date_format($cur_pend_date, "M j, Y"),
 					'date_scheduled'=>'', 'date_started'=>'', 'date_due'=>date_format($due_date, 'M j, Y'), 'date_completed'=>'')));
 			}
 			//
@@ -383,29 +334,6 @@ function ciniki_services_jobsMissing($ciniki) {
 			}
 			$count++;
 		}
-
-		//
-		// Sort the jobs array.  It only needs to be sorted
-		// if there were jobs added, otherwise it came from
-		// the database sorted.
-		//
-//		if( count($jobs) > 0 ) {
-//			if( isset($args['jobsort']) && $args['jobsort'] == 'DESC' ) {
-//				usort($subscriptions[$sid]['service']['jobs'], function($a, $b) {
-//					if( $a['job']['utc_pend_date'] == $b['job']['utc_pend_date'] ) {
-//						return 0;
-//					}
-//					return $a['job']['utc_pend_date'] > $b['job']['utc_pend_date'] ? -1 : 1;
-//				});
-//			} else {
-//				usort($subscriptions[$sid]['service']['jobs'], function($a, $b) {
-////					if( $a['job']['utc_pend_date'] == $b['job']['utc_pend_date'] ) {
-//						return 0;
-//					}
-//					return $a['job']['utc_pend_date'] < $b['job']['utc_pend_date'] ? -1 : 1;
-//				});
-//			}
-//		}
 	}
 
 	return array('stat'=>'ok', 'jobs'=>$jobs);

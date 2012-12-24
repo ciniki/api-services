@@ -181,9 +181,9 @@ function ciniki_services_serviceStats($ciniki) {
 								break;
 							case 30: $services[$sid]['service']['months'][$job['jobcount']['offset']]['month']['jobs_pending'] = $job['jobcount']['num_jobs'];
 								break;
-							case 40: $services[$sid]['service']['months'][$job['jobcount']['offset']]['month']['jobs_working'] = $job['jobcount']['num_jobs'];
+							case 50: $services[$sid]['service']['months'][$job['jobcount']['offset']]['month']['jobs_completed'] = $job['jobcount']['num_jobs'];
 								break;
-							case 60: $services[$sid]['service']['months'][$job['jobcount']['offset']]['month']['jobs_completed'] = $job['jobcount']['num_jobs'];
+							case 60: $services[$sid]['service']['months'][$job['jobcount']['offset']]['month']['jobs_signedoff'] = $job['jobcount']['num_jobs'];
 								break;
 							case 61: $services[$sid]['service']['months'][$job['jobcount']['offset']]['month']['jobs_skipped'] = $job['jobcount']['num_jobs'];
 								break;

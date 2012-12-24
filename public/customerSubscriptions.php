@@ -36,17 +36,17 @@
 // 		<service id="1" name="Service Name" date_started="Sep 1, 2010" date_ended=""/>
 //			<jobs>
 //				<job id="23" name="2007" status="60" status_text="Completed" pstart_date="Jan 1, 2007" pend_date="Dec 31, 2007" service_date="Dec 31, 2007" date_schedule="" date_due="Apr 31, 2008" 
-//					date_started="Apr 5, 2010" date_completed="Apr 10, 2010" />
+//					date_started="Apr 5, 2010" date_completed="Apr 10, 2010" date_signedoff="Apr 12, 2010"/>
 //				<job id="0" name="2008" status="0" status_text="Missing" pstart_date="Jan 1, 2008" pend_date="Dec 31, 2008" service_date="Dec 31, 2008" date_schedule="" date_due="Apr 31, 2009" 
-//					date_started="" date_completed="" />
+//					date_started="" date_completed="" date_signedoff=""/>
 //				<job id="783" name="2009" status="61" status_text="Skipped" pstart_date="Jan 1, 2009" pend_date="Dec 31, 2009" service_date="Dec 31, 2009" date_schedule="" date_due="Apr 31, 2010"
-//					date_started="" date_completed="" />
+//					date_started="" date_completed="" date_signedoff=""/>
 //				<job id="783" name="2010" status="60" status_text="Completed" pstart_date="Jan 1, 2010" pend_date="Dec 31, 2010" service_date="Dec 31, 2010" date_schedule="" date_due="Apr 31, 2011"
 //					date_started="Mar 1, 2011" date_completed="Mar 23, 2011" />
-//				<job id="783" name="2011" status="60" status_text="Completed" pstart_date="Jan 1, 2011" pend_date="Dec 31, 2011" service_date="Dec 31, 2011" date_schedule="" date_due="Apr 31, 2012"
-//					date_started="Feb 25, 2012" date_completed="Mar 23, 2012" />
+//				<job id="783" name="2011" status="50" status_text="Completed" pstart_date="Jan 1, 2011" pend_date="Dec 31, 2011" service_date="Dec 31, 2011" date_schedule="" date_due="Apr 31, 2012"
+//					date_started="Feb 25, 2012" date_completed="Mar 23, 2012" date_signedoff=""/>
 //				<job id="783" name="2012" status="0" status_text="Upcoming" pstart_date="Jan 1, 2012" pend_date="Dec 31, 2012" service_date="Dec 31, 2012" date_schedule="" date_due="Apr 31, 2013"
-//					date_started="" date_completed="Mar 23, 2013" />
+//					date_started="" date_completed="Mar 23, 2013" date_signedoff=""/>
 //			</jobs>
 //		</service>
 // </subscriptions>
@@ -120,6 +120,7 @@ function ciniki_services_customerSubscriptions($ciniki) {
 			. "IFNULL(DATE_FORMAT(ciniki_service_jobs.date_started, '" . ciniki_core_dbQuote($ciniki, $date_format) . "'), '') AS job_date_started, "
 			. "IFNULL(DATE_FORMAT(ciniki_service_jobs.date_due, '" . ciniki_core_dbQuote($ciniki, $date_format) . "'), '') AS job_date_due, "
 			. "IFNULL(DATE_FORMAT(ciniki_service_jobs.date_completed, '" . ciniki_core_dbQuote($ciniki, $date_format) . "'), '') AS job_date_completed, "
+			. "IFNULL(DATE_FORMAT(ciniki_service_jobs.date_signedoff, '" . ciniki_core_dbQuote($ciniki, $date_format) . "'), '') AS job_date_signedoff, "
 			. "ciniki_service_jobs.status AS job_status "
 			. "FROM ciniki_service_subscriptions "
 			. "LEFT JOIN ciniki_services ON (ciniki_service_subscriptions.service_id = ciniki_services.id "
@@ -146,7 +147,7 @@ function ciniki_services_customerSubscriptions($ciniki) {
 				'fields'=>array('id'=>'job_id', 'name'=>'job_name', 'status'=>'job_status', 'status_text', 
 					'pstart_date', 'pend_date', 'raw_pend_date', 
 					'service_date', 'date_scheduled'=>'job_date_scheduled', 'date_started'=>'job_date_started', 
-					'date_due'=>'job_date_due', 'date_completed'=>'job_date_completed'),
+					'date_due'=>'job_date_due', 'date_completed'=>'job_date_completed', 'date_signedoff'=>'job_date_signedoff'),
 				'maps'=>array('status_text'=>$status_texts)),
 			));
 		if( $rc['stat'] != 'ok' ) {

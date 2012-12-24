@@ -2,13 +2,14 @@
 //
 // Description
 // -----------
-// This function will return the list of changes made to a field from the services module.
+// This function will return the list of changes made to a field in services settings.
 //
 // Arguments
 // ---------
 // api_key:
 // auth_token:
 // business_id:			The ID of the business to get the details for.
+// setting:				The setting to get the history for.
 //
 // Returns
 // -------

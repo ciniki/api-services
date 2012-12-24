@@ -10,8 +10,9 @@
 // api_key:
 // auth_token:
 // business_id:		The ID of the business to get the task list for.
-//
-// status_list:		The list of job statuses to get the jobs that match.
+// type:			(optional) The type of list to return.  The type of status_list must be passed.
+// status_list:		(optional) The list of job statuses to get the jobs that match.  This should
+//					be a comma delimited list.
 //
 // Returns
 // -------

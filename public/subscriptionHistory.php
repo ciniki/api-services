@@ -2,7 +2,7 @@
 //
 // Description
 // -----------
-// This method will return the list of changes for a subscription field.
+// This method will return the list of changes made toa subscription field.
 //
 // Arguments
 // ---------
@@ -39,11 +39,8 @@ function ciniki_services_subscriptionHistory($ciniki) {
 		return $rc;
 	}
 
-	if( $args['field'] == 'service_date'
-		|| $args['field'] == 'date_scheduled'
-		|| $args['field'] == 'date_started'
-		|| $args['field'] == 'date_due'
-		|| $args['field'] == 'date_completed' ) {
+	if( $args['field'] == 'date_started'
+		|| $args['field'] == 'date_ended' ) {
 		ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'dbGetModuleHistoryReformat');
 		return ciniki_core_dbGetModuleHistoryReformat($ciniki, 'ciniki.services', 'ciniki_service_history', 
 			$args['business_id'], 'ciniki_service_subscriptions', $args['subscription_id'], $args['field'], 'date');

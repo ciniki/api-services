@@ -2,7 +2,7 @@
 //
 // Description
 // -----------
-// This method will return the history for a service.
+// This method will return the history for a service field.
 //
 // Arguments
 // ---------

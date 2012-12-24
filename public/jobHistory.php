@@ -2,13 +2,15 @@
 //
 // Description
 // -----------
-// This function will return the list of changes made to a field from the services module.
+// This function will return the list of changes made to a job field.
 //
 // Arguments
 // ---------
 // api_key:
 // auth_token:
 // business_id:			The ID of the business to get the details for.
+// job_id:				The ID of the job to get the history for.
+// field:				The field to get the changes for.
 //
 // Returns
 // -------
@@ -37,7 +39,9 @@ function ciniki_services_jobHistory($ciniki) {
 		return $rc;
 	}
 
-	if( $args['field'] == 'service_date'
+	if( $args['field'] == 'pstart_date'
+		|| $args['field'] == 'pend_date'
+		|| $args['field'] == 'service_date'
 		|| $args['field'] == 'date_scheduled'
 		|| $args['field'] == 'date_started'
 		|| $args['field'] == 'date_due'
