@@ -290,7 +290,8 @@ function ciniki_services_customerSubscriptions($ciniki) {
 						'utc_pend_date'=>$cur_pend_date->getTimestamp(), 
 						'pstart_date'=>date_format($cur_pstart_date, "M j, Y"), 'pend_date'=>date_format($cur_pend_date, "M j, Y"),
 //						'service_date'=>date_format($cur_pend_date, "M j, Y"),
-						'date_scheduled'=>'', 'date_started'=>'', 'date_due'=>date_format($due_date, 'M j, Y'), 'date_completed'=>'')));
+						'date_scheduled'=>'', 'date_started'=>'', 'date_due'=>date_format($due_date, 'M j, Y'), 
+						'date_completed'=>'', 'date_signedoff'=>'')));
 				}
 				//
 				// Advance the year
