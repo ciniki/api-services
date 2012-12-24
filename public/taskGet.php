@@ -2,8 +2,7 @@
 //
 // Description
 // ===========
-// This method will return all the details for a configured service, and 
-// the tasks associated with the service.
+// This method will return the details about a task for a service.
 //
 // Arguments
 // ---------
