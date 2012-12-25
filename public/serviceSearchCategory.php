@@ -36,7 +36,7 @@ function ciniki_services_serviceSearchCategory($ciniki) {
     // check permission to run this function for this business
     //  
 	ciniki_core_loadMethod($ciniki, 'ciniki', 'services', 'private', 'checkAccess');
-    $rc = ciniki_services_checkAccess($ciniki, $args['business_id'], 'ciniki.services.servicesSearchCategory', 0, 0); 
+    $rc = ciniki_services_checkAccess($ciniki, $args['business_id'], 'ciniki.services.serviceSearchCategory', 0, 0); 
     if( $rc['stat'] != 'ok' ) { 
         return $rc;
     }   
