@@ -128,7 +128,8 @@ function ciniki_services_checkAccess($ciniki, $business_id, $method, $req_id, $r
 				return array('stat'=>'fail', 'err'=>array('pkg'=>'ciniki', 'code'=>'844', 'msg'=>'Permission denied'));
 			}
 		}
-		if( $method == 'ciniki.services.jobUpdate' ) {
+		if( $method == 'ciniki.services.jobUpdate' 
+			|| $method == 'ciniki.services.jobDelete' ) {
 			//
 			// Check to make sure the job is assigned to business
 			//
@@ -145,7 +146,9 @@ function ciniki_services_checkAccess($ciniki, $business_id, $method, $req_id, $r
 				return array('stat'=>'fail', 'err'=>array('pkg'=>'ciniki', 'code'=>'860', 'msg'=>'Permission denied'));
 			}
 		}
-		if( $method == 'ciniki.services.subscriptionUpdate' ) {
+		if( $method == 'ciniki.services.subscriptionUpdate' 
+			|| $method == 'ciniki.services.subscriptionDelete' 
+			) {
 			//
 			// Check to make sure the subscription is assigned to business
 			//
