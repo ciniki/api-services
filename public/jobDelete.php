@@ -106,7 +106,7 @@ function ciniki_services_jobDelete($ciniki) {
 		. "";
 	$rc = ciniki_core_dbHashQuery($ciniki, $strsql, 'ciniki.services', 'job');
 	if( $rc['stat'] != 'ok' ) {
-		return array('stat'=>'fail', 'err'=>array('pkg'=>'ciniki', 'code'=>'877', 'msg'=>'Unable to remove job notes', 'err'=>$rc['err']));
+		return array('stat'=>'fail', 'err'=>array('pkg'=>'ciniki', 'code'=>'882', 'msg'=>'Unable to remove job notes', 'err'=>$rc['err']));
 	}
 	if( isset($rc['rows']) ) {
 		$notes = $rc['rows'];
@@ -120,7 +120,7 @@ function ciniki_services_jobDelete($ciniki) {
 		$rc = ciniki_core_dbDelete($ciniki, $strsql, 'ciniki.services');
 		if( $rc['stat'] != 'ok' ) { 
 			ciniki_core_dbTransactionRollback($ciniki, 'ciniki.services');
-			return array('stat'=>'fail', 'err'=>array('pkg'=>'ciniki', 'code'=>'878', 'msg'=>'Unable to remove job notes', 'err'=>$err['err']));
+			return array('stat'=>'fail', 'err'=>array('pkg'=>'ciniki', 'code'=>'883', 'msg'=>'Unable to remove job notes', 'err'=>$err['err']));
 		}
 	}
 
@@ -134,7 +134,7 @@ function ciniki_services_jobDelete($ciniki) {
 		. "";
 	$rc = ciniki_core_dbHashQuery($ciniki, $strsql, 'ciniki.services', 'job');
 	if( $rc['stat'] != 'ok' ) {
-		return array('stat'=>'fail', 'err'=>array('pkg'=>'ciniki', 'code'=>'877', 'msg'=>'Unable to remove job hours', 'err'=>$rc['err']));
+		return array('stat'=>'fail', 'err'=>array('pkg'=>'ciniki', 'code'=>'884', 'msg'=>'Unable to remove job hours', 'err'=>$rc['err']));
 	}
 	if( isset($rc['rows']) ) {
 		$hours = $rc['rows'];
@@ -148,7 +148,7 @@ function ciniki_services_jobDelete($ciniki) {
 		$rc = ciniki_core_dbDelete($ciniki, $strsql, 'ciniki.services');
 		if( $rc['stat'] != 'ok' ) { 
 			ciniki_core_dbTransactionRollback($ciniki, 'ciniki.services');
-			return array('stat'=>'fail', 'err'=>array('pkg'=>'ciniki', 'code'=>'878', 'msg'=>'Unable to remove job hours', 'err'=>$err['err']));
+			return array('stat'=>'fail', 'err'=>array('pkg'=>'ciniki', 'code'=>'885', 'msg'=>'Unable to remove job hours', 'err'=>$err['err']));
 		}
 	}
 
