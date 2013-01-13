@@ -43,6 +43,8 @@ function ciniki_services_settingsUpdate($ciniki) {
 		'job-status-50-colour'=>array('required'=>'no', 'blank'=>'no', 'name'=>'Completed Status Colour'),
 		'job-status-60-colour'=>array('required'=>'no', 'blank'=>'no', 'name'=>'Signed Off Status Colour'),
 		'job-status-61-colour'=>array('required'=>'no', 'blank'=>'no', 'name'=>'Skipped Status Colour'),
+		'ui-form-person-category'=>array('required'=>'no', 'blank'=>'no', 'name'=>'Person Category'),
+		'ui-form-business-category'=>array('required'=>'no', 'blank'=>'no', 'name'=>'Business Category'),
         )); 
     if( $rc['stat'] != 'ok' ) { 
         return $rc;
@@ -87,6 +89,8 @@ function ciniki_services_settingsUpdate($ciniki) {
 		'job-status-50-colour',
 		'job-status-60-colour',
 		'job-status-61-colour',
+		'ui-form-person-category',
+		'ui-form-business-category',
 		);
 	//
 	// Check each valid setting and see if a new value was passed in the arguments for it.

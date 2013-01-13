@@ -359,17 +359,42 @@ function ciniki_services_customerSubscriptions($ciniki) {
 		$strsql = "SELECT ciniki_service_subscriptions.id, "
 			. "ciniki_service_subscriptions.service_id, "
 			. "ciniki_service_subscriptions.status, "
-			. "ciniki_service_subscriptions.date_started, "
-			. "ciniki_service_subscriptions.date_ended, "
+			. "IFNULL(DATE_FORMAT(ciniki_service_subscriptions.date_started, '" . ciniki_core_dbQuote($ciniki, $date_format) . "'), '') AS date_started, "
+			. "IFNULL(DATE_FORMAT(ciniki_service_subscriptions.date_ended, '" . ciniki_core_dbQuote($ciniki, $date_format) . "'), '') AS date_ended, "
+			. "ciniki_service_subscriptions.date_started AS raw_date_started, "
+			. "ciniki_service_subscriptions.date_ended AS raw_date_ended, "
+			. "ciniki_services.name, "
 			. "ciniki_services.repeat_type, "
-			. "ciniki_services.repeat_interval "
+			. "ciniki_services.repeat_interval, "
+			. "ciniki_services.due_after_days, ciniki_services.due_after_months "
 			. "FROM ciniki_service_subscriptions "
 			. "LEFT JOIN ciniki_services ON (ciniki_service_subscriptions.service_id = ciniki_services.id "
 				. "AND ciniki_services.business_id = '" . ciniki_core_dbQuote($ciniki, $args['business_id']) . "') "
 			. "WHERE ciniki_service_subscriptions.business_id = '" . ciniki_core_dbQuote($ciniki, $args['business_id']) . "' "
-			. "AND ciniki_service_subscriptions.customer_id = '" . ciniki_core_dbQuote($ciniki, $args['customer_id']) . "' "
+			. "AND ciniki_service_subscriptions.customer_id = '" . ciniki_core_dbQuote($ciniki, $args['customer_id']) . "' ";
+		if( isset($args['subscription_id']) && $args['subscription_id'] != '' ) {
+			$strsql .= "AND ciniki_service_subscriptions.id = '" . ciniki_core_dbQuote($ciniki, $args['subscription_id']) . "' ";
+		}
+		$strsql .= ""
 			. "AND ciniki_services.repeat_type > 0 "
+			. "ORDER BY ciniki_services.name, ciniki_service_subscriptions.id "
 			. "";
+		ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'dbHashQueryTree');
+		$rc = ciniki_core_dbHashQueryTree($ciniki, $strsql, 'ciniki.services', array(
+			array('container'=>'subscriptions', 'fname'=>'id', 'name'=>'subscription',
+				'fields'=>array('id', 'service_id', 'name', 'status', 'date_started', 'date_ended', 
+					'repeat_type', 'repeat_interval', 'raw_date_started', 'raw_date_ended', 'due_after_days', 'due_after_months')),
+			));
+		if( $rc['stat'] != 'ok' ) {
+			return $rc;
+		} 
+		if( !isset($rc['subscriptions']) ) {
+			if( isset($args['subscription_id']) && $args['subscription_id'] != '' ) {
+				return array('stat'=>'fail', 'err'=>array('pkg'=>'ciniki', 'code'=>'895', 'msg'=>'Unable to find subscription'));
+			}
+			return array('stat'=>'ok', 'subscriptions'=>array());
+		}
+		$subscriptions = $rc['subscriptions'];
 	}
 
 	return array('stat'=>'ok', 'subscriptions'=>$subscriptions);

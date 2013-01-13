@@ -71,7 +71,8 @@ function ciniki_services_serviceStats($ciniki) {
 		. "FROM ciniki_services "
 		. "LEFT JOIN ciniki_service_subscriptions ON (ciniki_services.id = ciniki_service_subscriptions.service_id) "
 		// Check if the subscription has ended and nothing due after first month of stats
-		. "WHERE (ciniki_service_subscriptions.date_ended = 0 "
+		. "WHERE ciniki_services.business_id = '" . ciniki_core_dbQuote($ciniki, $args['business_id']) . "' "
+		. "AND (ciniki_service_subscriptions.date_ended = 0 "
 			. " OR PERIOD_DIFF('" . ciniki_core_dbQuote($ciniki, $pstart_date->format('Ym')) . "', DATE_FORMAT(ciniki_service_subscriptions.date_ended, '%Y%m')) < due_after_months ) "
 		. "GROUP BY ciniki_services.id, offset "
 		. "";

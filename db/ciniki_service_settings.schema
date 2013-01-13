@@ -17,6 +17,10 @@
 # Specify if the tracking id field should be used
 # - use-tracking-id - (yes|no)
 #
+# Specify the category to pull services from 
+# - ui-form-person-category = Personal
+# - ui-form-business-category = Corporation
+#
 # Fields
 # ------
 # business_id:	The id of the business the detail is for.

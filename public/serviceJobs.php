@@ -95,6 +95,7 @@ function ciniki_services_serviceJobs($ciniki) {
 	// merge in the actual jobs.
 	//
 	$strsql = "SELECT ciniki_service_subscriptions.id, ciniki_service_subscriptions.service_id, "
+		. "IFNULL(ciniki_service_jobs.tracking_id, '') AS tracking_id, "
 		. "IFNULL(ciniki_service_jobs.id, '0') AS job_id, "
 		. "IFNULL(ciniki_service_jobs.name, '') AS name, "
 		. "IFNULL(ciniki_service_jobs.status, '" . ciniki_core_dbQuote($ciniki, $default_status) . "') AS status, "
@@ -153,7 +154,8 @@ function ciniki_services_serviceJobs($ciniki) {
 	ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'dbHashQueryTree');
 	$rc = ciniki_core_dbHashQueryTree($ciniki, $strsql, 'ciniki.services', array(
 		array('container'=>'jobs', 'fname'=>'id', 'name'=>'job',
-			'fields'=>array('id'=>'job_id', 'subscription_id'=>'id', 'name', 'status', 'status_text', 'service_id', 'customer_id', 'customer_type', 'customer_name', 'company', 
+			'fields'=>array('id'=>'job_id', 'tracking_id', 'subscription_id'=>'id', 
+				'name', 'status', 'status_text', 'service_id', 'customer_id', 'customer_type', 'customer_name', 'company', 
 				'year_offset', 'period_months', 'due_after_months', 'quarter',
 				'subscription_date_started', 'repeat_type', 'repeat_interval',
 				'pstart_date', 'pend_date', 'date_due', 'service_date'),

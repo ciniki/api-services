@@ -52,9 +52,9 @@ function ciniki_services_jobAdd($ciniki) {
 		'tracking_id'=>array('required'=>'no', 'blank'=>'yes', 'name'=>'Tracking ID'),
 		'status'=>array('required'=>'no', 'blank'=>'no', 'default'=>'10', 'name'=>'Status',
 			'validlist'=>array('10','20','30','50', '60','61')),
-		'name'=>array('required'=>'yes', 'blank'=>'no', 'name'=>'Name'),
-		'pstart_date'=>array('required'=>'no', 'blank'=>'no', 'type'=>'date', 'name'=>'Start Date'),
-		'pend_date'=>array('required'=>'no', 'blank'=>'no', 'type'=>'date', 'name'=>'End Date'),
+		'name'=>array('required'=>'no', 'blank'=>'no', 'name'=>'Name'),
+		'pstart_date'=>array('required'=>'yes', 'blank'=>'no', 'type'=>'date', 'name'=>'Start Date'),
+		'pend_date'=>array('required'=>'no', 'blank'=>'no', 'type'=>'date', 'default'=>'', 'name'=>'End Date'),
 		'service_date'=>array('required'=>'no', 'blank'=>'no', 'type'=>'date', 'default'=>'', 'name'=>'Service Date'),
 		'date_scheduled'=>array('required'=>'no', 'blank'=>'yes', 'type'=>'date', 'default'=>'', 'name'=>'Date Scheduled'),
 		'date_started'=>array('required'=>'no', 'blank'=>'yes', 'type'=>'date', 'default'=>'', 'name'=>'Date Started'),
@@ -62,6 +62,7 @@ function ciniki_services_jobAdd($ciniki) {
 		'date_completed'=>array('required'=>'no', 'blank'=>'yes', 'type'=>'date', 'default'=>'', 'name'=>'Date Completed'),
 		'date_signedoff'=>array('required'=>'no', 'blank'=>'yes', 'type'=>'date', 'default'=>'', 'name'=>'Date Signed Off'),
 		'note'=>array('required'=>'no', 'blank'=>'yes', 'name'=>'Note'),
+		'create_subscription'=>array('required'=>'no', 'blank'=>'yes', 'name'=>'Create Subscription'),
         )); 
     if( $rc['stat'] != 'ok' ) { 
         return $rc;
@@ -78,6 +79,21 @@ function ciniki_services_jobAdd($ciniki) {
         return $rc;
     }
 
+	//  
+	// Turn off autocommit
+	//  
+	ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'dbTransactionStart');
+	ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'dbTransactionRollback');
+	ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'dbTransactionCommit');
+	ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'dbQuote');
+	ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'dbInsert');
+	ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'dbHashQuery');
+	ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'dbAddModuleHistory');
+	$rc = ciniki_core_dbTransactionStart($ciniki, 'ciniki.services');
+	if( $rc['stat'] != 'ok' ) { 
+		return $rc;
+	}   
+
 	//
 	// Check if subscription belongs to business
 	//
@@ -89,26 +105,185 @@ function ciniki_services_jobAdd($ciniki) {
 			. "";
 		$rc = ciniki_core_dbHashQuery($ciniki, $strsql, 'ciniki.services', 'subscription');
 		if( $rc['stat'] != 'ok' ) {
+			ciniki_core_dbTransactionRollback($ciniki, 'ciniki.services');
 			return $rc;
 		}
 		if( !isset($rc['subscription']) || $rc['subscription']['id'] != $args['subscription_id'] ) {
+			ciniki_core_dbTransactionRollback($ciniki, 'ciniki.services');
 			return array('stat'=>'fail', 'err'=>array('pkg'=>'ciniki', 'code'=>'876', 'msg'=>'Invalid subscription'));
+		}
+	} elseif( isset($args['create_subscription']) && $args['create_subscription'] == 'yes' ) {
+		//
+		// Check for existing subscription
+		//
+		$strsql = "SELECT ciniki_service_subscriptions.id "
+			. "FROM ciniki_service_subscriptions "
+			. "WHERE ciniki_service_subscriptions.business_id = '" . ciniki_core_dbQuote($ciniki, $args['business_id']) . "' "
+			. "AND ciniki_service_subscriptions.service_id = '" . ciniki_core_dbQuote($ciniki, $args['service_id']) . "' "
+			. "AND ciniki_service_subscriptions.customer_id = '" . ciniki_core_dbQuote($ciniki, $args['customer_id']) . "' "
+			. "";
+		$rc = ciniki_core_dbHashQuery($ciniki, $strsql, 'ciniki.services', 'subscription');
+		if( $rc['stat'] != 'ok' ) {
+			ciniki_core_dbTransactionRollback($ciniki, 'ciniki.services');
+			return $rc;
+		}
+		if( !isset($rc['rows'][0]) ) {
+			//
+			// Add the service subscription
+			//
+			$strsql = "INSERT INTO ciniki_service_subscriptions (business_id, "
+				. "service_id, customer_id, status, "
+				. "date_started, date_ended, "
+				. "date_added, last_updated) VALUES ("
+				. "'" . ciniki_core_dbQuote($ciniki, $args['business_id']) . "', "
+				. "'" . ciniki_core_dbQuote($ciniki, $args['service_id']) . "', "
+				. "'" . ciniki_core_dbQuote($ciniki, $args['customer_id']) . "', "
+				. "'10', "
+				. "'" . ciniki_core_dbQuote($ciniki, $args['pstart_date']) . "', "
+				. "'', "
+				. "UTC_TIMESTAMP(), UTC_TIMESTAMP())"
+				. "";
+			$rc = ciniki_core_dbInsert($ciniki, $strsql, 'ciniki.services');
+			if( $rc['stat'] != 'ok' ) { 
+				ciniki_core_dbTransactionRollback($ciniki, 'ciniki.services');
+				return $rc;
+			}
+			if( !isset($rc['insert_id']) || $rc['insert_id'] < 1 ) {
+				ciniki_core_dbTransactionRollback($ciniki, 'ciniki.services');
+				return array('stat'=>'fail', 'err'=>array('pkg'=>'ciniki', 'code'=>'989', 'msg'=>'Unable to add service'));
+			}
+			$subscription_id = $rc['insert_id'];
+
+			//
+			// Add all the fields to the change log
+			//
+			$rc = ciniki_core_dbAddModuleHistory($ciniki, 'ciniki.services', 'ciniki_service_history', 
+				$args['business_id'], 1, 'ciniki_service_subscriptions', $subscription_id, 'status', '10');
+			$rc = ciniki_core_dbAddModuleHistory($ciniki, 'ciniki.services', 'ciniki_service_history', 
+				$args['business_id'], 1, 'ciniki_service_subscriptions', $subscription_id, 'date_started', $args['pstart_date']);
+			$rc = ciniki_core_dbAddModuleHistory($ciniki, 'ciniki.services', 'ciniki_service_history', 
+				$args['business_id'], 1, 'ciniki_service_subscriptions', $subscription_id, 'date_ended', '');
+			$changelog_fields = array(
+				'service_id',
+				'customer_id',
+				);
+			foreach($changelog_fields as $field) {
+				if( isset($args[$field]) && $args[$field] != '' ) {
+					$rc = ciniki_core_dbAddModuleHistory($ciniki, 'ciniki.services', 'ciniki_service_history', 
+						$args['business_id'], 1, 'ciniki_service_subscriptions', $subscription_id, $field, $args[$field]);
+				}
+			}
+			$args['subscription_id'] = $subscription_id;
+		} else {
+			$args['subscription_id'] = $rc['rows'][0]['id'];
 		}
 	}
 
-	//  
-	// Turn off autocommit
-	//  
-	ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'dbTransactionStart');
-	ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'dbTransactionRollback');
-	ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'dbTransactionCommit');
-	ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'dbQuote');
-	ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'dbInsert');
-	ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'dbAddModuleHistory');
-	$rc = ciniki_core_dbTransactionStart($ciniki, 'ciniki.services');
-	if( $rc['stat'] != 'ok' ) { 
-		return $rc;
-	}   
+	//
+	// Check if we need to fill in some missing fields
+	//
+	if( !isset($args['name']) || $args['name'] == '' 
+		|| !isset($args['pend_date']) || $args['pend_date'] == '' 
+		|| !isset($args['date_due']) || $args['date_due'] == '' ) {
+		$cur_pstart_date = date_create($args['pstart_date']);
+		$strsql = "SELECT ciniki_services.repeat_type, ciniki_services.repeat_interval, "
+			. "ciniki_services.due_after_days, ciniki_services.due_after_months, "
+			. "ciniki_service_subscriptions.date_started AS raw_date_started, "
+			. "ciniki_service_subscriptions.date_ended AS raw_date_ended, "
+			. "PERIOD_DIFF('" . ciniki_core_dbQuote($ciniki, $cur_pstart_date->format('Ym')) . "', "
+				. "DATE_FORMAT(ciniki_service_subscriptions.date_started, '%Y%m')) AS mdiff "
+			. "FROM ciniki_service_subscriptions, ciniki_services "
+			. "WHERE ciniki_service_subscriptions.business_id = '" . ciniki_core_dbQuote($ciniki, $args['business_id']) . "' "
+			. "AND ciniki_service_subscriptions.id = '" . ciniki_core_dbQuote($ciniki, $args['subscription_id']) . "' "
+			. "AND ciniki_service_subscriptions.customer_id = '" . ciniki_core_dbQuote($ciniki, $args['customer_id']) . "' "
+			. "AND ciniki_service_subscriptions.service_id = ciniki_services.id "
+			. "AND ciniki_services.business_id = '" . ciniki_core_dbQuote($ciniki, $args['business_id']) . "' "
+			. "";
+		$rc = ciniki_core_dbHashQuery($ciniki, $strsql, 'ciniki.services', 'subscription');
+		if( $rc['stat'] != 'ok' ) {
+			ciniki_core_dbTransactionRollback($ciniki, 'ciniki.services');
+			return $rc;
+		}
+		if( !isset($rc['subscription']) ) {
+			ciniki_core_dbTransactionRollback($ciniki, 'ciniki.services');
+			return array('stat'=>'fail', 'err'=>array('pkg'=>'ciniki', 'code'=>'983', 'msg'=>'Invalid subscription'));
+		}
+		$subscription = $rc['subscription'];
+
+		$date_started = date_create($subscription['raw_date_started']);
+//		$date_ended = date_create($subscription['raw_date_ended']);
+
+		//
+		// Setup the period end date
+		//
+		if( !isset($args['pend_date']) || $args['pend_date'] == '' ) {
+			$interval = 0;
+			if( $subscription['repeat_type'] == 30 ) {
+				$interval = new DateInterval("P" . $subscription['repeat_interval'] . "M");
+			} elseif( $subscription['repeat_type'] == 40 ) {
+				$interval = new DateInterval("P" . $subscription['repeat_interval'] . "Y");
+			}
+			$lessaday = new DateInterval("P1D");
+			
+			$cur_pend_date = clone $cur_pstart_date;
+			$cur_pend_date->add($interval);
+			$cur_pend_date->sub($lessaday);
+			$args['pend_date'] = $cur_pend_date->format('Y-m-d');
+		} else {
+			$cur_pend_date = date_create($args['pend_date']);
+		}
+
+		//
+		// Setup the due date
+		//
+		if( !isset($args['due_date']) || $args['due_date'] == '' ) {
+			$dueinterval = 0;
+			if( $subscription['due_after_days'] > 0 && $subscription['due_after_months'] > 0 ) {
+				$dueinterval = new DateInterval("P" . $subscription['due_after_months'] . "M" . $subscription['due_after_days'] . "D");
+			} elseif( $subscription['due_after_days'] > 0 ) {
+				$dueinterval = new DateInterval("P" . $subscription['due_after_days'] . "D");
+			} elseif( $subscription['due_after_months'] > 0 ) {
+				$dueinterval = new DateInterval("P" . $subscription['due_after_months'] . "M");
+			}
+			// Setup due date
+			$due_date = clone $cur_pend_date;
+			$due_date->add($dueinterval);
+
+			// Check for month rollover
+			if( $cur_pend_date->format('j') >= 28 && $due_date->format('j') < 5 ) {
+				$due_date->modify('last day of previous month');
+			}
+			// Check if end is last day of month
+			elseif( $cur_pend_date->format('t') == $cur_pend_date->format('j') && $due_date->format('t') != $due_date->format('j') ) {
+				$due_date->modify('last day of this month');
+			}
+			$args['date_due'] = $due_date->format('Y-m-d');
+		}
+
+		//
+		// Setup the job name if not specified
+		//
+		if( !isset($args['name']) || $args['name'] == '' ) {
+			//
+			// Setup the name for the job
+			//
+			error_log(date_format($cur_pstart_date, 'Y-m-d'));
+			if( $subscription['repeat_type'] == 30 ) {
+				if( $subscription['repeat_interval'] == 3 ) {
+				error_log('1');	
+					$args['name'] = date_format($cur_pstart_date, 'Y') . " Q" . (floor(($subscription['mdiff']%12)/3) + 1);
+				} else {
+				error_log('2');	
+					$args['name'] = date_format($cur_pstart_date, 'Y-M');
+				}
+			} elseif( $subscription['repeat_type'] == 40 ) {
+				error_log('3');	
+				$args['name'] = date_format($cur_pstart_date, 'Y');
+			} else {
+				$args['name'] = '';
+			}
+		}
+	}
 
 	//
 	// Add the job to the database

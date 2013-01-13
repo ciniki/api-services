@@ -146,7 +146,7 @@ function ciniki_services_jobsList($ciniki) {
 	ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'dbHashQueryTree');
 	$rc = ciniki_core_dbHashQueryTree($ciniki, $strsql, 'ciniki.services', array(
 		array('container'=>'jobs', 'fname'=>'id', 'name'=>'job',
-			'fields'=>array('id'=>'id', 'customer_id', 'customer_name', 
+			'fields'=>array('id'=>'id', 'tracking_id', 'customer_id', 'customer_name', 
 				'service_name', 'name', 'status', 'status_text', 
 				'pstart_date', 'pend_date', 
 				'date_scheduled', 'date_started', 'date_due', 'date_completed', 'date_signedoff'),

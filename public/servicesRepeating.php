@@ -54,7 +54,7 @@ function ciniki_services_servicesRepeating($ciniki) {
 	ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'dbHashQueryTree');
 	$rc = ciniki_core_dbHashQueryTree($ciniki, $strsql, 'ciniki.services', array(
 		array('container'=>'services', 'fname'=>'id', 'name'=>'service',
-			'fields'=>array('id', 'name')),
+			'fields'=>array('id', 'category', 'name')),
 		));
 	if( $rc['stat'] != 'ok' ) {
 		return $rc;
