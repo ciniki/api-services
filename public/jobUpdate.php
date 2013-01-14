@@ -48,6 +48,7 @@ function ciniki_services_jobUpdate($ciniki) {
 		'status'=>array('required'=>'no', 'blank'=>'no', 'name'=>'Status',
 			'validlist'=>array('10','20','30','50','60','61')),
 		'name'=>array('required'=>'no', 'blank'=>'no', 'name'=>'Name'),
+		'assigned'=>array('required'=>'no', 'blank'=>'yes', 'type'=>'idlist', 'name'=>'Assignments'),
 		'pstart_date'=>array('required'=>'no', 'blank'=>'no', 'type'=>'date', 'name'=>'Start Date'),
 		'pend_date'=>array('required'=>'no', 'blank'=>'no', 'type'=>'date', 'name'=>'End Date'),
 		'service_date'=>array('required'=>'no', 'blank'=>'no', 'type'=>'date', 'name'=>'Service Date'),
@@ -56,6 +57,12 @@ function ciniki_services_jobUpdate($ciniki) {
 		'date_due'=>array('required'=>'no', 'blank'=>'yes', 'type'=>'date', 'name'=>'Date Due'),
 		'date_completed'=>array('required'=>'no', 'blank'=>'yes', 'type'=>'date', 'name'=>'Date Completed'),
 		'date_signedoff'=>array('required'=>'no', 'blank'=>'yes', 'type'=>'date', 'name'=>'Date Signed Off'),
+		'efile_number'=>array('required'=>'no', 'blank'=>'yes', 'name'=>'eFile Number'),
+		'invoice_amount'=>array('required'=>'no', 'blank'=>'yes', 'name'=>'Invoice Amount'),
+		'tax1_name'=>array('required'=>'no', 'blank'=>'yes', 'name'=>'Taxes'),
+		'tax1_amount'=>array('required'=>'no', 'blank'=>'yes', 'name'=>'Taxes'),
+		'tax2_name'=>array('required'=>'no', 'blank'=>'yes', 'name'=>'Taxes'),
+		'tax2_amount'=>array('required'=>'no', 'blank'=>'yes', 'name'=>'Taxes'),
 		'note'=>array('required'=>'no', 'blank'=>'yes', 'name'=>'Note'),
         )); 
     if( $rc['stat'] != 'ok' ) { 
@@ -107,6 +114,12 @@ function ciniki_services_jobUpdate($ciniki) {
 		'date_due',
 		'date_completed',
 		'date_signedoff',
+		'efile_number',
+		'invoice_amount',
+		'tax1_name',
+		'tax1_amount',
+		'tax2_name',
+		'tax2_amount',
 		);
 	foreach($changelog_fields as $field) {
 		if( isset($args[$field]) ) {
@@ -140,6 +153,49 @@ function ciniki_services_jobUpdate($ciniki) {
 		if( $rc['stat'] != 'ok' ) {
 			ciniki_core_dbTransactionRollback($ciniki, 'ciniki.services');
 			return array('stat'=>'fail', 'err'=>array('pkg'=>'ciniki', 'code'=>'865', 'msg'=>'Unable to update job'));
+		}
+	}
+
+	//
+	// Check if the assigned users has changed
+	//
+	if( isset($args['assigned']) && is_array($args['assigned']) ) {
+		ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'dbQueryList');
+		ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'threadRemoveUserPerms');
+		ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'threadAddUserPerms');
+		//
+		// Get the list of currently assigned users
+		//
+		$strsql = "SELECT user_id "
+			. "FROM ciniki_service_job_users "
+			. "WHERE job_id = '" . ciniki_core_dbQuote($ciniki, $args['job_id']) . "' "
+			. "AND (perms&0x04) = 4 "
+			. "";
+		$rc = ciniki_core_dbQueryList($ciniki, $strsql, 'ciniki.services', 'users', 'user_id');
+		if( $rc['stat'] != 'ok' ) {
+			return array('stat'=>'fail', 'err'=>array('pkg'=>'ciniki', 'code'=>'952', 'msg'=>'Unable to load service job information', 'err'=>$rc['err']));
+		}
+		$job_users = $rc['users'];
+		// 
+		// Remove users no longer assigned
+		//
+		$to_be_removed = array_diff($job_users, $args['assigned']);
+		if( is_array($to_be_removed) ) {
+			foreach($to_be_removed as $user_id) {
+				$rc = ciniki_core_threadRemoveUserPerms($ciniki, 'ciniki.services', 'ciniki_service_job_users', 'job', $args['job_id'], $user_id, 0x04);
+				if( $rc['stat'] != 'ok' ) {
+					return array('stat'=>'fail', 'err'=>array('pkg'=>'ciniki', 'code'=>'951', 'msg'=>'Unable to update service job information', 'err'=>$rc['err']));
+				}
+			}
+		}
+		$to_be_added = array_diff($args['assigned'], $job_users);
+		if( is_array($to_be_added) ) {
+			foreach($to_be_added as $user_id) {
+				$rc = ciniki_core_threadAddUserPerms($ciniki, 'ciniki.services', 'ciniki_service_job_users', 'job', $args['job_id'], $user_id, (0x04));
+				if( $rc['stat'] != 'ok' ) {
+					return array('stat'=>'fail', 'err'=>array('pkg'=>'ciniki', 'code'=>'950', 'msg'=>'Unable to update service job information', 'err'=>$rc['err']));
+				}
+			}
 		}
 	}
 

@@ -74,6 +74,12 @@ function ciniki_services_jobGet($ciniki) {
 		. "DATE_FORMAT(ciniki_service_jobs.date_due, '" . ciniki_core_dbQuote($ciniki, $date_format) . "') AS date_due, "
 		. "DATE_FORMAT(ciniki_service_jobs.date_completed, '" . ciniki_core_dbQuote($ciniki, $date_format) . "') AS date_completed, "
 		. "DATE_FORMAT(ciniki_service_jobs.date_signedoff, '" . ciniki_core_dbQuote($ciniki, $date_format) . "') AS date_signedoff, "
+		. "ciniki_service_jobs.efile_number, "
+		. "ciniki_service_jobs.invoice_amount, "
+		. "ciniki_service_jobs.tax1_name, "
+		. "ciniki_service_jobs.tax1_amount, "
+		. "ciniki_service_jobs.tax2_name, "
+		. "ciniki_service_jobs.tax2_amount, "
 		. "ciniki_services.name AS service_name, "
 		. "DATE_FORMAT(CONVERT_TZ(ciniki_service_jobs.date_added, '+00:00', '" . ciniki_core_dbQuote($ciniki, $utc_offset) . "'), '" . ciniki_core_dbQuote($ciniki, $datetime_format) . "') AS date_added, "
 		. "DATE_FORMAT(CONVERT_TZ(ciniki_service_jobs.last_updated, '+00:00', '" . ciniki_core_dbQuote($ciniki, $utc_offset) . "'), '" . ciniki_core_dbQuote($ciniki, $datetime_format) . "') AS last_updated "
@@ -89,6 +95,7 @@ function ciniki_services_jobGet($ciniki) {
 			'fields'=>array('id', 'tracking_id', 'name', 'service_date', 'status', 'service_name',
 				'pstart_date', 'pend_date', 
 				'date_scheduled', 'date_started', 'date_due', 'date_completed', 
+				'efile_number', 'invoice_amount', 'tax1_name', 'tax1_amount', 'tax2_name', 'tax2_amount',
 				'date_added', 'last_updated')),
 		));
 	if( $rc['stat'] != 'ok' ) {
@@ -152,6 +159,42 @@ function ciniki_services_jobGet($ciniki) {
 			$job['notes'] = array();
 		} else {
 			$job['notes'] = $rc['notes'];
+		}
+	}
+
+	//
+	// Get the list of users attached to the job
+	//
+	$strsql = "SELECT job_id, user_id, perms "
+		. "FROM ciniki_service_job_users "
+		. "WHERE job_id = '" . ciniki_core_dbQuote($ciniki, $args['job_id']) . "' ";
+	ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'dbRspQueryPlusUserIDs');
+	$rc = ciniki_core_dbRspQueryPlusUserIDs($ciniki, $strsql, 'ciniki.services', 'users', 'user', array('stat'=>'ok', 'users'=>array(), 'user_ids'=>array()));
+	if( $rc['stat'] != 'ok' ) {
+		return array('stat'=>'fail', 'err'=>array('pkg'=>'ciniki', 'code'=>'949', 'msg'=>'Unable to load item information', 'err'=>$rc['err']));
+	}
+	$job_users = $rc['users'];
+	$user_ids = array_merge($user_ids, $rc['user_ids']);
+
+	//
+	// Build the list of followers and users assigned to the job
+	//
+	$job['assigned'] = array();
+	foreach($job_users as $unum => $user) {
+		$display_name = 'unknown';
+		if( isset($users[$user['user']['user_id']]) ) {
+			$display_name = $users[$user['user']['user_id']]['display_name'];
+		}
+		// Followers
+		if( ($user['user']['perms'] & 0x01) > 0 ) {
+			array_push($job['followers'], array('user'=>array('id'=>$user['user']['user_id'], 'display_name'=>$display_name)));
+		}
+		// Assigned to
+		if( ($user['user']['perms'] & 0x04) > 0 ) {
+			if( $job['assigned'] != '' ) {
+				$job['assigned'] .= ',';
+			}
+			$job['assigned'] .= $user['user']['user_id'];
 		}
 	}
 

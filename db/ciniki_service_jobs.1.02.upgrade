@@ -1,0 +1,10 @@
+#
+# This file will upgrade the database table ciniki_service_jobs to version 1.02.
+#
+ALTER TABLE ciniki_service_jobs ADD COLUMN efile_number varchar(50) not null after date_signedoff;
+ALTER TABLE ciniki_service_jobs ADD COLUMN invoice_amount decimal(10,2) not null after efile_number;
+ALTER TABLE ciniki_service_jobs ADD COLUMN tax1_name varchar(50) not null after invoice_amount;
+ALTER TABLE ciniki_service_jobs ADD COLUMN tax1_amount decimal(10,2) not null after tax1_name;
+ALTER TABLE ciniki_service_jobs ADD COLUMN tax2_name varchar(50) not null after tax1_amount;
+ALTER TABLE ciniki_service_jobs ADD COLUMN tax2_amount decimal(10,2) not null after tax2_name;
+ALTER TABLE ciniki_service_jobs COMMENT='v1.02';

@@ -50,6 +50,7 @@ function ciniki_services_jobAdd($ciniki) {
 		'customer_id'=>array('required'=>'yes', 'blank'=>'no', 'name'=>'Customer'),
 		'subscription_id'=>array('required'=>'no', 'blank'=>'no', 'default'=>'0', 'name'=>'Subscription'),
 		'tracking_id'=>array('required'=>'no', 'blank'=>'yes', 'name'=>'Tracking ID'),
+		'assigned'=>array('required'=>'no', 'blank'=>'yes', 'type'=>'idlist', 'name'=>'Assignments'),
 		'status'=>array('required'=>'no', 'blank'=>'no', 'default'=>'10', 'name'=>'Status',
 			'validlist'=>array('10','20','30','50', '60','61')),
 		'name'=>array('required'=>'no', 'blank'=>'no', 'name'=>'Name'),
@@ -61,6 +62,12 @@ function ciniki_services_jobAdd($ciniki) {
 		'date_due'=>array('required'=>'no', 'blank'=>'yes', 'type'=>'date', 'default'=>'', 'name'=>'Date Due'),
 		'date_completed'=>array('required'=>'no', 'blank'=>'yes', 'type'=>'date', 'default'=>'', 'name'=>'Date Completed'),
 		'date_signedoff'=>array('required'=>'no', 'blank'=>'yes', 'type'=>'date', 'default'=>'', 'name'=>'Date Signed Off'),
+		'efile_number'=>array('required'=>'no', 'blank'=>'yes', 'default'=>'', 'name'=>'eFile Number'),
+		'invoice_amount'=>array('required'=>'no', 'blank'=>'yes', 'default'=>'', 'name'=>'Invoice Amount'),
+		'tax1_name'=>array('required'=>'no', 'blank'=>'yes', 'default'=>'', 'name'=>'Taxes'),
+		'tax1_amount'=>array('required'=>'no', 'blank'=>'yes', 'default'=>'', 'name'=>'Taxes'),
+		'tax2_name'=>array('required'=>'no', 'blank'=>'yes', 'default'=>'', 'name'=>'Taxes'),
+		'tax2_amount'=>array('required'=>'no', 'blank'=>'yes', 'default'=>'', 'name'=>'Taxes'),
 		'note'=>array('required'=>'no', 'blank'=>'yes', 'name'=>'Note'),
 		'create_subscription'=>array('required'=>'no', 'blank'=>'yes', 'name'=>'Create Subscription'),
         )); 
@@ -292,6 +299,7 @@ function ciniki_services_jobAdd($ciniki) {
 		. "service_id, customer_id, tracking_id, name, service_date, status, "
 		. "pstart_date, pend_date, "
 		. "date_scheduled, date_started, date_due, date_completed, date_signedoff, "
+		. "efile_number, invoice_amount, tax1_name, tax1_amount, tax2_name, tax2_amount, "
 		. "date_added, last_updated) VALUES ("
 		. "UUID(), "
 		. "'" . ciniki_core_dbQuote($ciniki, $args['business_id']) . "', "
@@ -309,6 +317,12 @@ function ciniki_services_jobAdd($ciniki) {
 		. "'" . ciniki_core_dbQuote($ciniki, $args['date_due']) . "', "
 		. "'" . ciniki_core_dbQuote($ciniki, $args['date_completed']) . "', "
 		. "'" . ciniki_core_dbQuote($ciniki, $args['date_signedoff']) . "', "
+		. "'" . ciniki_core_dbQuote($ciniki, $args['efile_number']) . "', "
+		. "'" . ciniki_core_dbQuote($ciniki, $args['invoice_amount']) . "', "
+		. "'" . ciniki_core_dbQuote($ciniki, $args['tax1_name']) . "', "
+		. "'" . ciniki_core_dbQuote($ciniki, $args['tax1_amount']) . "', "
+		. "'" . ciniki_core_dbQuote($ciniki, $args['tax2_name']) . "', "
+		. "'" . ciniki_core_dbQuote($ciniki, $args['tax2_amount']) . "', "
 		. "UTC_TIMESTAMP(), UTC_TIMESTAMP())"
 		. "";
 	$rc = ciniki_core_dbInsert($ciniki, $strsql, 'ciniki.services');
@@ -340,6 +354,12 @@ function ciniki_services_jobAdd($ciniki) {
 		'date_due',
 		'date_completed',
 		'date_signedoff',
+		'efile_number',
+		'invoice_amount',
+		'tax1_name',
+		'tax1_amount',
+		'tax2_name',
+		'tax2_amount',
 		);
 	foreach($changelog_fields as $field) {
 		if( isset($args[$field]) && $args[$field] != '' ) {
@@ -410,6 +430,22 @@ function ciniki_services_jobAdd($ciniki) {
 		}
 	}
 
+	//
+	// Add users who were assigned.  If the creator also is assigned the atdo, then they will be 
+	// both a follower (above code) and assigned (below code).
+	// Add the viewed flag to be set, so it's marked as unread for new assigned users.
+	//
+	if( isset($args['assigned']) && is_array($args['assigned']) ) {
+		ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'threadAddUserPerms');
+		foreach( $args['assigned'] as $user_id ) {
+			$rc = ciniki_core_threadAddUserPerms($ciniki, 'ciniki.services', 'ciniki_service_job_users', 'job', $job_id, $user_id, (0x04));
+			if( $rc['stat'] != 'ok' ) {
+				ciniki_core_dbTransactionRollback($ciniki, 'ciniki.services');
+				return $rc;
+			}
+		}
+	}
+	
 	//
 	// Commit the database changes
 	//

@@ -84,8 +84,14 @@ create table ciniki_service_jobs (
 	date_due datetime not null,
 	date_completed datetime not null,
 	date_signedoff datetime not null,
+	efile_number varchar(50) not null,
+	invoice_amount decimal(10,2) not null,
+	tax1_name varchar(50) not null,
+	tax1_amount decimal(10,2) not null,
+	tax2_name varchar(50) not null,
+	tax2_amount decimal(10,2) not null,
 	date_added datetime not null,
 	last_updated datetime not null,
 	primary key (id),
 	index (subscription_id, service_id, customer_id)
-) ENGINE='InnoDB', COMMENT='v1.01';
+) ENGINE='InnoDB', COMMENT='v1.02';
