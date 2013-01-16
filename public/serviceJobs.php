@@ -95,6 +95,7 @@ function ciniki_services_serviceJobs($ciniki) {
 	// merge in the actual jobs.
 	//
 	$strsql = "SELECT ciniki_service_subscriptions.id, ciniki_service_subscriptions.service_id, "
+		. "CONCAT_WS('-', ciniki_service_subscriptions.id, ciniki_service_jobs.id) AS list_id, "
 		. "IFNULL(ciniki_service_jobs.tracking_id, '') AS tracking_id, "
 		. "IFNULL(ciniki_service_jobs.id, '0') AS job_id, "
 		. "IFNULL(ciniki_service_jobs.name, '') AS name, "
@@ -131,7 +132,8 @@ function ciniki_services_serviceJobs($ciniki) {
 		. "due_after_months, "
 		. "CASE repeat_type WHEN 40 THEN 12 WHEN 30 THEN repeat_interval END AS period_months, "
 		. "IFNULL(DATE_FORMAT(ciniki_service_subscriptions.date_started, '" . ciniki_core_dbQuote($ciniki, $date_format) . "'), '') AS subscription_date_started, "
-		. "ciniki_services.repeat_type, ciniki_services.repeat_interval "
+		. "ciniki_services.repeat_type, ciniki_services.repeat_interval, "
+		. "IFNULL(ciniki_users.display_name, '') AS assigned_names "
 		. "FROM ciniki_service_subscriptions "
 		. "LEFT JOIN ciniki_service_jobs ON (ciniki_service_subscriptions.id = ciniki_service_jobs.subscription_id "
 			. "AND ciniki_service_subscriptions.customer_id = ciniki_service_jobs.customer_id "
@@ -144,23 +146,29 @@ function ciniki_services_serviceJobs($ciniki) {
 		. "LEFT JOIN ciniki_customers ON (ciniki_service_subscriptions.customer_id = ciniki_customers.id "
 			. "AND ciniki_services.business_id = '" . ciniki_core_dbQuote($ciniki, $args['business_id']) . "' "
 			. ") "
+		. "LEFT JOIN ciniki_service_job_users ON (ciniki_service_jobs.id = ciniki_service_job_users.job_id "
+			. "AND (ciniki_service_job_users.perms&0x04) = 0x04 "
+			. ") "
+		. "LEFT JOIN ciniki_users ON (ciniki_service_job_users.user_id = ciniki_users.id) "
 		. "WHERE ciniki_service_subscriptions.business_id = '" . ciniki_core_dbQuote($ciniki, $args['business_id']) . "' "
 		. "AND ciniki_service_subscriptions.service_id = '" . ciniki_core_dbQuote($ciniki, $args['service_id']) . "' "
 		. "AND ((PERIOD_DIFF('" . ciniki_core_dbQuote($ciniki, sprintf("%04d%02d", $args['year'], $args['month'])) . "', DATE_FORMAT(ciniki_service_subscriptions.date_started-INTERVAL 1 DAY, '%Y%m'))-due_after_months) "
 			. "MOD CASE repeat_type WHEN 40 THEN 12 WHEN 30 THEN repeat_interval END) = 0 "
 		. "AND (ciniki_service_subscriptions.date_ended = 0 "
 			. " OR PERIOD_DIFF('" . ciniki_core_dbQuote($ciniki, sprintf("%04d%02d", $args['year'], $args['month'])) . "', DATE_FORMAT(ciniki_service_subscriptions.date_ended, '%Y%m')) <= due_after_months ) "
-		. "ORDER BY ciniki_service_jobs.status ";
+		. "ORDER BY ciniki_service_jobs.status, ciniki_service_jobs.id, assigned_names "
+		. "";
 	ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'dbHashQueryTree');
 	$rc = ciniki_core_dbHashQueryTree($ciniki, $strsql, 'ciniki.services', array(
-		array('container'=>'jobs', 'fname'=>'id', 'name'=>'job',
+		array('container'=>'jobs', 'fname'=>'list_id', 'name'=>'job',
 			'fields'=>array('id'=>'job_id', 'tracking_id', 'subscription_id'=>'id', 
 				'name', 'status', 'status_text', 'service_id', 'customer_id', 'customer_type', 'customer_name', 'company', 
 				'year_offset', 'period_months', 'due_after_months', 'quarter',
 				'subscription_date_started', 'repeat_type', 'repeat_interval',
-				'pstart_date', 'pend_date', 'date_due', 'service_date'),
+				'pstart_date', 'pend_date', 'date_due', 'service_date', 'assigned_names'),
+			'lists'=>array('assigned_names'),
 			'maps'=>array('status_text'=>$status_texts),
-			)
+			),
 		));
 	if( $rc['stat'] != 'ok' ) {	
 		return $rc;

@@ -66,10 +66,13 @@ function ciniki_services_serviceStats($ciniki) {
 		// Get the number of months this subscription should go for
 		. "PERIOD_DIFF(DATE_FORMAT(date_ended, '%Y%m'),'" . ciniki_core_dbQuote($ciniki, $pstart_date->format('Ym')) . "') AS num_months_left, "
 		. "CASE repeat_type WHEN 40 THEN 12 WHEN 30 THEN repeat_interval END AS repeat_period, "
-		. "((PERIOD_DIFF('" . ciniki_core_dbQuote($ciniki, $pstart_date->format('Ym')) . "', DATE_FORMAT(date_started-INTERVAL 1 DAY, '%Y%m'))-due_after_months) "
+		. "((PERIOD_DIFF('" . ciniki_core_dbQuote($ciniki, $pstart_date->format('Ym')) . "', DATE_FORMAT(ciniki_service_subscriptions.date_started-INTERVAL 1 DAY, '%Y%m'))-due_after_months) "
 			. "MOD CASE repeat_type WHEN 40 THEN 12 WHEN 30 THEN repeat_interval END) AS offset "
 		. "FROM ciniki_services "
-		. "LEFT JOIN ciniki_service_subscriptions ON (ciniki_services.id = ciniki_service_subscriptions.service_id) "
+		. "LEFT JOIN ciniki_service_subscriptions ON (ciniki_services.id = ciniki_service_subscriptions.service_id "
+			. "AND ciniki_service_subscriptions.business_id = '" . ciniki_core_dbQuote($ciniki, $args['business_id']) . "') "
+//		. "LEFT JOIN ciniki_service_jobs ON (ciniki_services.id = ciniki_service_jobs.service_id "
+//			. "AND ciniki_service_jobs.business_id = '" . ciniki_core_dbQuote($ciniki, $args['business_id']) . "') "
 		// Check if the subscription has ended and nothing due after first month of stats
 		. "WHERE ciniki_services.business_id = '" . ciniki_core_dbQuote($ciniki, $args['business_id']) . "' "
 		. "AND (ciniki_service_subscriptions.date_ended = 0 "
