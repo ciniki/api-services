@@ -165,6 +165,7 @@ function ciniki_services_jobGet($ciniki) {
 	//
 	// Get the list of users attached to the job
 	//
+	$user_ids = array();
 	$strsql = "SELECT job_id, user_id, perms "
 		. "FROM ciniki_service_job_users "
 		. "WHERE job_id = '" . ciniki_core_dbQuote($ciniki, $args['job_id']) . "' ";
