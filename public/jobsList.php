@@ -40,6 +40,8 @@ function ciniki_services_jobsList($ciniki) {
         'business_id'=>array('required'=>'yes', 'blank'=>'no', 'name'=>'Business'), 
         'type'=>array('required'=>'no', 'blank'=>'no', 'validlist'=>array('pastdue'), 'name'=>'Type'), 
         'status_list'=>array('required'=>'no', 'blank'=>'no', 'type'=>'idlist', 'name'=>'Status List'), 
+        'assigned_id'=>array('required'=>'no', 'blank'=>'no', 'name'=>'Assigned'), 
+        'tracking_id_start'=>array('required'=>'no', 'blank'=>'no', 'name'=>'Tracking ID'), 
         )); 
     if( $rc['stat'] != 'ok' ) { 
         return $rc;
@@ -49,7 +51,7 @@ function ciniki_services_jobsList($ciniki) {
 	//
 	// Must have type or status_list defined
 	//
-	if( !isset($args['type']) && !isset($args['status_list']) ) {
+	if( !isset($args['type']) && !isset($args['status_list']) && !isset($args['assigned_id']) && !isset($args['tracking_id_start']) ) {
 		return array('stat'=>'fail', 'err'=>array('pkg'=>'ciniki', 'code'=>'874', 'msg'=>'Must specify a type or status list.'));
 	}
     
@@ -125,12 +127,23 @@ function ciniki_services_jobsList($ciniki) {
 		// Default to a person
 		$strsql .= "CONCAT_WS(' ', first, last) AS customer_name ";
 	}
+	$strsql .= ", IFNULL(u1.display_name, '') AS assigned_names ";
 	$strsql .= "FROM ciniki_service_jobs "
 		. "LEFT JOIN ciniki_services ON (ciniki_service_jobs.service_id = ciniki_services.id "
 			. "AND ciniki_services.business_id = '" . ciniki_core_dbQuote($ciniki, $args['business_id']) . "') "
 		. "LEFT JOIN ciniki_customers ON (ciniki_service_jobs.customer_id = ciniki_customers.id "
 			. "AND ciniki_customers.business_id = '" . ciniki_core_dbQuote($ciniki, $args['business_id']) . "') "
-		. "WHERE ciniki_service_jobs.business_id = '" . ciniki_core_dbQuote($ciniki, $args['business_id']) . "' "
+		. "LEFT JOIN ciniki_service_job_users AS ju1 ON (ciniki_service_jobs.id = ju1.job_id "
+			. "AND (ju1.perms&0x04) = 0x04 "
+			. ") "
+		. "LEFT JOIN ciniki_users AS u1 ON (ju1.user_id = u1.id) "
+		. "";
+	if( isset($args['assigned_id']) ) {
+		$strsql .= "LEFT JOIN ciniki_service_job_users AS ju2 ON (ciniki_service_jobs.id = ju2.job_id "
+			. "AND ju2.user_id = '" . ciniki_core_dbQuote($ciniki, $args['assigned_id']) . "' "
+			. "AND (ju2.perms&0x04) = 0x04 ) ";
+	}
+	$strsql .= "WHERE ciniki_service_jobs.business_id = '" . ciniki_core_dbQuote($ciniki, $args['business_id']) . "' "
 		. "";
 	if( isset($args['type']) && $args['type'] == 'pastdue' ) {
 		$strsql .= "AND ciniki_service_jobs.status < 60 "
@@ -138,18 +151,26 @@ function ciniki_services_jobsList($ciniki) {
 			. "";
 	} elseif( isset($args['status_list']) ) {
 		$strsql .= "AND ciniki_service_jobs.status IN (" . ciniki_core_dbQuoteIDs($ciniki, $args['status_list']) . ") ";
+	} elseif( isset($args['assigned_id']) ) {
+		$strsql .= "AND ju2.user_id = '" . ciniki_core_dbQuote($ciniki, $args['assigned_id']) . "' ";
+	} elseif( isset($args['tracking_id_start']) ) {
+		$strsql .= "AND ciniki_service_jobs.tracking_id LIKE '" . ciniki_core_dbQuote($ciniki, $args['tracking_id_start']) . "%' ";
 	} else {
 		return array('stat'=>'fail', 'err'=>array('pkg'=>'ciniki', 'code'=>'875', 'msg'=>'Must specify a type or status list.'));
 	}
-	$strsql .= "ORDER BY ciniki_service_jobs.status, customer_name, ciniki_service_jobs.date_due "
-		. "";
+	if( isset($args['tracking_id_start']) ) {
+		$strsql .= "ORDER BY ciniki_service_jobs.tracking_id, customer_name, ciniki_service_jobs.status, ciniki_service_jobs.date_due ";
+	} else {
+		$strsql .= "ORDER BY ciniki_service_jobs.status, customer_name, ciniki_service_jobs.date_due ";
+	}
 	ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'dbHashQueryTree');
 	$rc = ciniki_core_dbHashQueryTree($ciniki, $strsql, 'ciniki.services', array(
 		array('container'=>'jobs', 'fname'=>'id', 'name'=>'job',
 			'fields'=>array('id'=>'id', 'tracking_id', 'customer_id', 'customer_name', 
 				'service_name', 'name', 'status', 'status_text', 
 				'pstart_date', 'pend_date', 
-				'date_scheduled', 'date_started', 'date_due', 'date_completed', 'date_signedoff'),
+				'date_scheduled', 'date_started', 'date_due', 'date_completed', 'date_signedoff', 'assigned_names'),
+			'lists'=>array('assigned_names'),
 			'maps'=>array('status_text'=>$status_texts)),
 		));
 	if( $rc['stat'] != 'ok' ) {

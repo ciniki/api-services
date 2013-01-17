@@ -39,16 +39,15 @@ function ciniki_services_checkAccess($ciniki, $business_id, $method, $req_id, $r
 		return array('stat'=>'fail', 'err'=>array('pkg'=>'ciniki', 'code'=>'833', 'msg'=>'No permissions granted'));
 	}
 
-	// FIXME: Check if this is needed
-	//	//
-	//	// Sysadmins are allowed full access, except for deleting.
-	//	//
-	//	if( $method != 'ciniki.services.delete' ) {
-	//		if( ($ciniki['session']['user']['perms'] & 0x01) == 0x01 ) {
-	//			return array('stat'=>'ok', 'modules'=>$modules);
-//		}
-//	}
-//
+	//
+	// Sysadmins are allowed full access, except for deleting.
+	//
+	if( $method != 'ciniki.services.delete' ) {
+		if( ($ciniki['session']['user']['perms'] & 0x01) == 0x01 ) {
+			return array('stat'=>'ok', 'modules'=>$modules);
+		}
+	}
+
 	//
 	// Users who are an owner or employee of a business can see the business services
 	//
