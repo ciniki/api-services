@@ -73,5 +73,5 @@ create table ciniki_services (
 	last_updated datetime not null,
 	primary key (id),
 	index (business_id, name),
-	index (business_id, uuid, last_updated)
+	index uuid (business_id, uuid, last_updated)
 ) ENGINE='InnoDB', COMMENT='v1.02';

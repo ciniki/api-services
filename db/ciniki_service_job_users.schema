@@ -27,5 +27,7 @@ create table ciniki_service_job_users (
 	perms tinyint unsigned not null,
 	date_added datetime not null,
 	last_updated datetime not null,
-	primary key (job_id, user_id)
-) ENGINE='InnoDB', COMMENT='v1.01';
+	primary key (id),
+	unique index (job_id, user_id),
+	index (business_id, uuid, last_updated)
+) ENGINE='InnoDB', COMMENT='v1.02';

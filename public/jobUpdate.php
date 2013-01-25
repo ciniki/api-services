@@ -145,7 +145,7 @@ function ciniki_services_jobUpdate($ciniki) {
 	//
 	if( isset($args['note']) && $args['note'] != '' ) {
 		ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'threadAddFollowup');
-		$rc = ciniki_core_threadAddFollowup($ciniki, 'ciniki.services', 'ciniki_service_job_notes', 'job', $args['job_id'], array(
+		$rc = ciniki_core_threadAddFollowup($ciniki, 'ciniki.services', $args['business_id'], 'ciniki_service_job_notes', 'job', $args['job_id'], array(
 			'user_id'=>$ciniki['session']['user']['id'],
 			'job_id'=>$args['job_id'],
 			'content'=>$args['note'],
@@ -191,7 +191,7 @@ function ciniki_services_jobUpdate($ciniki) {
 		$to_be_added = array_diff($args['assigned'], $job_users);
 		if( is_array($to_be_added) ) {
 			foreach($to_be_added as $user_id) {
-				$rc = ciniki_core_threadAddUserPerms($ciniki, 'ciniki.services', 'ciniki_service_job_users', 'job', $args['job_id'], $user_id, (0x04));
+				$rc = ciniki_core_threadAddUserPerms($ciniki, 'ciniki.services', $args['business_id'], 'ciniki_service_job_users', 'job', $args['job_id'], $user_id, (0x04));
 				if( $rc['stat'] != 'ok' ) {
 					return array('stat'=>'fail', 'err'=>array('pkg'=>'ciniki', 'code'=>'950', 'msg'=>'Unable to update service job information', 'err'=>$rc['err']));
 				}

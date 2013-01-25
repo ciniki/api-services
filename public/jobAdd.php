@@ -419,7 +419,7 @@ function ciniki_services_jobAdd($ciniki) {
 	//
 	if( isset($args['note']) && $args['note'] != '' ) {
 		ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'threadAddFollowup');
-		$rc = ciniki_core_threadAddFollowup($ciniki, 'ciniki.services', 'ciniki_service_job_notes', 'job', $job_id, array(
+		$rc = ciniki_core_threadAddFollowup($ciniki, 'ciniki.services', $args['business_id'], 'ciniki_service_job_notes', 'job', $job_id, array(
 			'user_id'=>$ciniki['session']['user']['id'],
 			'job_id'=>$job_id,
 			'content'=>$args['note'],
@@ -438,7 +438,7 @@ function ciniki_services_jobAdd($ciniki) {
 	if( isset($args['assigned']) && is_array($args['assigned']) ) {
 		ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'threadAddUserPerms');
 		foreach( $args['assigned'] as $user_id ) {
-			$rc = ciniki_core_threadAddUserPerms($ciniki, 'ciniki.services', 'ciniki_service_job_users', 'job', $job_id, $user_id, (0x04));
+			$rc = ciniki_core_threadAddUserPerms($ciniki, 'ciniki.services', $args['business_id'], 'ciniki_service_job_users', 'job', $job_id, $user_id, (0x04));
 			if( $rc['stat'] != 'ok' ) {
 				ciniki_core_dbTransactionRollback($ciniki, 'ciniki.services');
 				return $rc;

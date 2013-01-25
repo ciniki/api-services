@@ -1,5 +1,5 @@
 #
 # This file will add the index to ciniki_service_jobs to allow for faster sync
 #
-CREATE INDEX uuid ON ciniki_service_jobs (business_id, uuid, last_updated);
+CREATE INDEX business_id ON ciniki_service_jobs (business_id, uuid, last_updated);
 ALTER TABLE ciniki_service_jobs COMMENT='v1.03';
