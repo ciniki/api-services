@@ -7,6 +7,8 @@
 # Fields
 # ------
 # id:				The ID of the task.
+# uuid:				The Universal Unique ID for the task.
+# business_id:		The ID of the business the task is attached to.
 # service_id:		The ID of the service the task is for.
 # step:				The step number for this task.  
 # name:				The name of the step.
@@ -19,6 +21,8 @@
 #
 create table ciniki_service_tasks (
 	id int not null auto_increment,
+	uuid char(36) not null,
+	business_id int not null,
 	service_id int not null,
 	step tinyint unsigned not null,
 	name varchar(250) not null,
@@ -29,5 +33,6 @@ create table ciniki_service_tasks (
 	date_added datetime not null,
 	last_updated datetime not null,
 	primary key (id),
-	index (service_id, step)
-) ENGINE='InnoDB', COMMENT='v1.01';
+	index (service_id, step),
+	index (business_id, uuid, last_updated)
+) ENGINE='InnoDB', COMMENT='v1.02';

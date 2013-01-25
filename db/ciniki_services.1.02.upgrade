@@ -1,0 +1,6 @@
+#
+# This file will add the uuid and business_id to ciniki_service_tasks
+# which are required for the sync to work.
+#
+CREATE INDEX uuid ON ciniki_services (business_id, uuid, last_updated);
+ALTER TABLE ciniki_services COMMENT='v1.02';

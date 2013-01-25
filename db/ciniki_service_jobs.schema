@@ -61,6 +61,14 @@
 # date_completed:			The date and time the job was completed.
 # date_signedoff:			The date and time the job was signed off by the customer.
 #
+# efile_number:				The number used in tax jobs when filed with government.
+#
+# invoice_amount:			The total before taxes for this jobs.
+# tax1_name:				The name of the first tax applied eg(GST, HST)
+# tax1_amount:				The amount in dollars and cents charged in tax.
+# tax2_name:				The second tax name.
+# tax2_amount:				The second tax amount.
+#
 # date_added:				The UTC date and time the job was added.
 # last_updated:				The UTC date and time the job was last changed.
 #
@@ -93,5 +101,6 @@ create table ciniki_service_jobs (
 	date_added datetime not null,
 	last_updated datetime not null,
 	primary key (id),
-	index (subscription_id, service_id, customer_id)
-) ENGINE='InnoDB', COMMENT='v1.02';
+	index (subscription_id, service_id, customer_id),
+	index (business_id, uuid, last_updated)
+) ENGINE='InnoDB', COMMENT='v1.03';

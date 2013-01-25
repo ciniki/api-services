@@ -8,6 +8,7 @@
 # Fields
 # ------
 # id:				The ID of the customer service entry.
+# uuid:				The Universal Unique ID for each subscription.
 # business_id:		The ID of the business the service belongs to.
 # service_id:		The ID of the recurring service the customer is subscribed to.
 # customer_id:		The ID of the customer.
@@ -32,6 +33,7 @@
 #
 create table ciniki_service_subscriptions (
 	id int not null auto_increment,
+	uuid char(36) not null,
 	business_id int not null,
 	service_id int not null,
 	customer_id int not null,
@@ -41,5 +43,6 @@ create table ciniki_service_subscriptions (
 	date_added datetime not null,
 	last_updated datetime not null,
 	primary key (id),
-	index (service_id, customer_id)
-) ENGINE='InnoDB', COMMENT='v1.01';
+	index (service_id, customer_id),
+	index (business_id, uuid, last_updated)
+) ENGINE='InnoDB', COMMENT='v1.02';

@@ -1,0 +1,8 @@
+#
+# This file will add the uuid to ciniki_service_subscriptions
+# which are required for the sync to work.
+#
+ALTER TABLE ciniki_service_subscriptions ADD COLUMN uuid char(36) not null AFTER id;
+UPDATE ciniki_service_subscriptions SET uuid = uuid();
+CREATE INDEX uuid ON ciniki_service_subscriptions (business_id, uuid, last_updated);
+ALTER TABLE ciniki_service_subscriptions COMMENT='v1.02';
