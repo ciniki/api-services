@@ -30,4 +30,4 @@ create table ciniki_service_job_notes (
 	primary key (id),
 	index (job_id, user_id),
 	index (business_id, uuid, last_updated)
-) ENGINE='InnoDB', COMMENT='v1.01';
+) ENGINE='InnoDB', COMMENT='v1.02';
