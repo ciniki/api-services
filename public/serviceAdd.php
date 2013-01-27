@@ -35,7 +35,7 @@
 // -------
 // <rsp stat='ok' id='34' />
 //
-function ciniki_services_serviceAdd($ciniki) {
+function ciniki_services_serviceAdd(&$ciniki) {
     //  
     // Find all the required and optional arguments
     //  
@@ -84,6 +84,16 @@ function ciniki_services_serviceAdd($ciniki) {
 	}   
 
 	//
+	// Get a new UUID
+	//
+	ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'dbUUID');
+	$rc = ciniki_core_dbUUID($ciniki, 'ciniki.services');
+	if( $rc['stat'] != 'ok' ) {
+		return $rc;
+	}
+	$uuid = $rc['uuid'];
+
+	//
 	// Add the service to the database
 	//
 	$strsql = "INSERT INTO ciniki_services (uuid, business_id, status, "
@@ -91,7 +101,7 @@ function ciniki_services_serviceAdd($ciniki) {
 		. "duration, repeat_type, repeat_interval, repeat_number, "
 		. "due_after_days, due_after_months, "
 		. "date_added, last_updated) VALUES ("
-		. "UUID(), "
+		. "'" . ciniki_core_dbQuote($ciniki, $uuid) . "', "
 		. "'" . ciniki_core_dbQuote($ciniki, $args['business_id']) . "', "
 		. "'" . ciniki_core_dbQuote($ciniki, $args['status']) . "', "
 		. "'" . ciniki_core_dbQuote($ciniki, $args['name']) . "', "
@@ -115,6 +125,12 @@ function ciniki_services_serviceAdd($ciniki) {
 		return array('stat'=>'fail', 'err'=>array('pkg'=>'ciniki', 'code'=>'835', 'msg'=>'Unable to add service'));
 	}
 	$service_id = $rc['insert_id'];
+
+	//
+	// Add the uuid to the history
+	//
+	$rc = ciniki_core_dbAddModuleHistory($ciniki, 'ciniki.services', 'ciniki_service_history', 
+		$args['business_id'], 1, 'ciniki_services', $service_id, 'uuid', $uuid);
 
 	//
 	// Add all the fields to the change log
@@ -151,6 +167,8 @@ function ciniki_services_serviceAdd($ciniki) {
 	//
 	ciniki_core_loadMethod($ciniki, 'ciniki', 'businesses', 'private', 'updateModuleChangeDate');
 	ciniki_businesses_updateModuleChangeDate($ciniki, $args['business_id'], 'ciniki', 'services');
+
+	$ciniki['syncqueue'][] = array('push'=>'ciniki.services.service', 'args'=>array('id'=>$service_id));
 
 	return array('stat'=>'ok', 'id'=>$service_id);
 }

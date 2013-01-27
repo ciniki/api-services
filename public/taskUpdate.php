@@ -22,7 +22,7 @@
 // -------
 // <rsp stat='ok' id='34' />
 //
-function ciniki_services_taskUpdate($ciniki) {
+function ciniki_services_taskUpdate(&$ciniki) {
     //  
     // Find all the required and optional arguments
     //  
@@ -190,6 +190,9 @@ function ciniki_services_taskUpdate($ciniki) {
 	//
 	ciniki_core_loadMethod($ciniki, 'ciniki', 'businesses', 'private', 'updateModuleChangeDate');
 	ciniki_businesses_updateModuleChangeDate($ciniki, $args['business_id'], 'ciniki', 'services');
+
+	$ciniki['syncqueue'][] = array('push'=>'ciniki.services.task', 
+		'args'=>array('id'=>$args['task_id']));
 
 	return array('stat'=>'ok');
 }

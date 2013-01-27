@@ -15,7 +15,7 @@
 // -------
 // <rsp stat='ok' />
 //
-function ciniki_services_jobDelete($ciniki) {
+function ciniki_services_jobDelete(&$ciniki) {
     //  
     // Find all the required and optional arguments
     //  
@@ -54,8 +54,23 @@ function ciniki_services_jobDelete($ciniki) {
 	}   
 
 	//
-	// Remove the customer email address from the database.  It is still there in 
-	// the ciniki_customer_history table.
+	// Get the uuid of the customer to be deleted
+	//
+	$strsql = "SELECT uuid FROM ciniki_service_jobs "
+		. "WHERE business_id = '" . ciniki_core_dbQuote($ciniki, $args['business_id']) . "' "
+		. "AND id = '" . ciniki_core_dbQuote($ciniki, $args['job_id']) . "' "
+		. "";
+	$rc = ciniki_core_dbHashQuery($ciniki, $strsql, 'ciniki.services', 'job');
+	if( $rc['stat'] != 'ok' ) {
+		return $rc;
+	}
+	if( !isset($rc['job']) ) {
+		return array('stat'=>'fail', 'err'=>array('pkg'=>'ciniki', 'code'=>'108', 'msg'=>'Unable to find existing job'));
+	}
+	$job_uuid = $rc['job']['uuid'];
+
+	//
+	// Remote the job from the database.
 	//
 	$strsql = "DELETE FROM ciniki_service_jobs "
 		. "WHERE business_id = '" . ciniki_core_dbQuote($ciniki, $args['business_id']) . "' "
@@ -65,14 +80,14 @@ function ciniki_services_jobDelete($ciniki) {
 		ciniki_core_dbTransactionRollback($ciniki, 'ciniki.services');
 		return $rc;
 	}
-	$rc = ciniki_core_dbAddModuleHistory($ciniki, 'ciniki.services', 'ciniki_service_history', $args['business_id'], 
-		3, 'ciniki_service_jobs', $args['job_id'], '*', '');
+	$rc = ciniki_core_dbAddModuleHistory($ciniki, 'ciniki.services', 'ciniki_service_history', 
+		$args['business_id'], 3, 'ciniki_service_jobs', $args['job_id'], '*', '');
 
 	//
 	// Remove all the tasks associated with job
 	//
 	ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'dbHashQuery');
-	$strsql = "SELECT id "
+	$strsql = "SELECT id, uuid "
 		. "FROM ciniki_service_job_tasks "
 		. "WHERE job_id = '" . ciniki_core_dbQuote($ciniki, $args['job_id']) . "' "
 		. "";
@@ -83,8 +98,10 @@ function ciniki_services_jobDelete($ciniki) {
 	if( isset($rc['rows']) ) {
 		$tasks = $rc['rows'];
 		foreach($tasks as $tid => $task) {
-			$rc = ciniki_core_dbAddModuleHistory($ciniki, 'ciniki.services', 'ciniki_service_history', $args['business_id'],
-				3, 'ciniki_service_job_tasks', $task['id'], '*', '');
+			$rc = ciniki_core_dbAddModuleHistory($ciniki, 'ciniki.services', 'ciniki_service_history', 
+				$args['business_id'], 3, 'ciniki_service_job_tasks', $task['id'], '*', '');
+			$ciniki['syncqueue'][] = array('push'=>'ciniki.services.job_task', 
+				'args'=>array('delete_uuid'=>$task['uuid'], 'delete_id'=>$task['id']));
 		}
 		$strsql = "DELETE FROM ciniki_service_job_tasks "
 			. "WHERE job_id = '" . ciniki_core_dbQuote($ciniki, $args['job_id']) . "' "
@@ -100,7 +117,7 @@ function ciniki_services_jobDelete($ciniki) {
 	// Remove all the notes associated with job
 	//
 	ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'dbHashQuery');
-	$strsql = "SELECT id "
+	$strsql = "SELECT id, uuid "
 		. "FROM ciniki_service_job_notes "
 		. "WHERE job_id = '" . ciniki_core_dbQuote($ciniki, $args['job_id']) . "' "
 		. "";
@@ -111,8 +128,10 @@ function ciniki_services_jobDelete($ciniki) {
 	if( isset($rc['rows']) ) {
 		$notes = $rc['rows'];
 		foreach($notes as $tid => $note) {
-			$rc = ciniki_core_dbAddModuleHistory($ciniki, 'ciniki.services', 'ciniki_service_history', $args['business_id'],
-				3, 'ciniki_service_job_notes', $note['id'], '*', '');
+			$rc = ciniki_core_dbAddModuleHistory($ciniki, 'ciniki.services', 'ciniki_service_history', 
+				$args['business_id'], 3, 'ciniki_service_job_notes', $note['id'], '*', '');
+			$ciniki['syncqueue'][] = array('push'=>'ciniki.services.job_note', 
+				'args'=>array('delete_uuid'=>$note['uuid'], 'delete_id'=>$note['id']));
 		}
 		$strsql = "DELETE FROM ciniki_service_job_notes "
 			. "WHERE job_id = '" . ciniki_core_dbQuote($ciniki, $args['job_id']) . "' "
@@ -128,7 +147,7 @@ function ciniki_services_jobDelete($ciniki) {
 	// Remove all the hours associated with job
 	//
 	ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'dbHashQuery');
-	$strsql = "SELECT id "
+	$strsql = "SELECT id, uuid "
 		. "FROM ciniki_service_job_hours "
 		. "WHERE job_id = '" . ciniki_core_dbQuote($ciniki, $args['job_id']) . "' "
 		. "";
@@ -139,8 +158,10 @@ function ciniki_services_jobDelete($ciniki) {
 	if( isset($rc['rows']) ) {
 		$hours = $rc['rows'];
 		foreach($hours as $tid => $hour) {
-			$rc = ciniki_core_dbAddModuleHistory($ciniki, 'ciniki.services', 'ciniki_service_history', $args['business_id'],
-				3, 'ciniki_service_job_hours', $hour['id'], '*', '');
+			$rc = ciniki_core_dbAddModuleHistory($ciniki, 'ciniki.services', 'ciniki_service_history', 
+				$args['business_id'], 3, 'ciniki_service_job_hours', $hour['id'], '*', '');
+			$ciniki['syncqueue'][] = array('push'=>'ciniki.services.job_hour', 
+				'args'=>array('delete_uuid'=>$hour['uuid'], 'delete_id'=>$hour['id']));
 		}
 		$strsql = "DELETE FROM ciniki_service_job_hours "
 			. "WHERE job_id = '" . ciniki_core_dbQuote($ciniki, $args['job_id']) . "' "
@@ -156,7 +177,7 @@ function ciniki_services_jobDelete($ciniki) {
 	// Remove all the users associated with job
 	//
 	ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'dbHashQuery');
-	$strsql = "SELECT user_id "
+	$strsql = "SELECT id, uuid, user_id "
 		. "FROM ciniki_service_job_users "
 		. "WHERE job_id = '" . ciniki_core_dbQuote($ciniki, $args['job_id']) . "' "
 		. "";
@@ -167,8 +188,10 @@ function ciniki_services_jobDelete($ciniki) {
 	if( isset($rc['rows']) ) {
 		$users = $rc['rows'];
 		foreach($users as $uid => $user) {
-			$rc = ciniki_core_dbAddModuleHistory($ciniki, 'ciniki.services', 'ciniki_service_history', $args['business_id'],
-				3, 'ciniki_service_job_users', $user['user_id'], '*', '');
+			$rc = ciniki_core_dbAddModuleHistory($ciniki, 'ciniki.services', 'ciniki_service_history', 
+				$args['business_id'], 3, 'ciniki_service_job_users', $user['id'], '*', '');
+			$ciniki['syncqueue'][] = array('push'=>'ciniki.services.job_user', 
+				'args'=>array('delete_uuid'=>$user['uuid'], 'delete_id'=>$user['id']));
 		}
 		$strsql = "DELETE FROM ciniki_service_job_users "
 			. "WHERE job_id = '" . ciniki_core_dbQuote($ciniki, $args['job_id']) . "' "
@@ -194,6 +217,10 @@ function ciniki_services_jobDelete($ciniki) {
 	//
 	ciniki_core_loadMethod($ciniki, 'ciniki', 'businesses', 'private', 'updateModuleChangeDate');
 	ciniki_businesses_updateModuleChangeDate($ciniki, $args['business_id'], 'ciniki', 'services');
+
+//	FIXME: Add delete 
+	$ciniki['syncqueue'][] = array('push'=>'ciniki.services.job', 
+		'args'=>array('delete_uuid'=>$job_uuid, 'delete_id'=>$args['job_id']));
 
 	return array('stat'=>'ok');
 }

@@ -23,7 +23,7 @@
 // -------
 // <rsp stat='ok' id='34' />
 //
-function ciniki_services_subscriptionAdd($ciniki) {
+function ciniki_services_subscriptionAdd(&$ciniki) {
     //  
     // Find all the required and optional arguments
     //  
@@ -67,12 +67,23 @@ function ciniki_services_subscriptionAdd($ciniki) {
 	}   
 
 	//
+	// Get a new UUID
+	//
+	ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'dbUUID');
+	$rc = ciniki_core_dbUUID($ciniki, 'ciniki.services');
+	if( $rc['stat'] != 'ok' ) {
+		return $rc;
+	}
+	$uuid = $rc['uuid'];
+
+	//
 	// Add the service to the database
 	//
-	$strsql = "INSERT INTO ciniki_service_subscriptions (business_id, "
+	$strsql = "INSERT INTO ciniki_service_subscriptions (uuid, business_id, "
 		. "service_id, customer_id, status, "
 		. "date_started, date_ended, "
 		. "date_added, last_updated) VALUES ("
+		. "'" . ciniki_core_dbQuote($ciniki, $uuid) . "', "
 		. "'" . ciniki_core_dbQuote($ciniki, $args['business_id']) . "', "
 		. "'" . ciniki_core_dbQuote($ciniki, $args['service_id']) . "', "
 		. "'" . ciniki_core_dbQuote($ciniki, $args['customer_id']) . "', "
@@ -91,6 +102,12 @@ function ciniki_services_subscriptionAdd($ciniki) {
 		return array('stat'=>'fail', 'err'=>array('pkg'=>'ciniki', 'code'=>'838', 'msg'=>'Unable to add service'));
 	}
 	$subscription_id = $rc['insert_id'];
+
+	//
+	// Add the uuid to the history
+	//
+	$rc = ciniki_core_dbAddModuleHistory($ciniki, 'ciniki.services', 'ciniki_service_history', 
+		$args['business_id'], 1, 'ciniki_service_subscriptions', $subscription_id, 'uuid', $uuid);
 
 	//
 	// Add all the fields to the change log
@@ -123,6 +140,9 @@ function ciniki_services_subscriptionAdd($ciniki) {
 	//
 	ciniki_core_loadMethod($ciniki, 'ciniki', 'businesses', 'private', 'updateModuleChangeDate');
 	ciniki_businesses_updateModuleChangeDate($ciniki, $args['business_id'], 'ciniki', 'services');
+
+	$ciniki['syncqueue'][] = array('push'=>'ciniki.services.subscription', 
+		'args'=>array('id'=>$subscription_id));
 
 	return array('stat'=>'ok', 'id'=>$subscription_id);
 }

@@ -36,7 +36,7 @@
 // -------
 // <rsp stat='ok' id='34' />
 //
-function ciniki_services_jobUpdate($ciniki) {
+function ciniki_services_jobUpdate(&$ciniki) {
     //  
     // Find all the required and optional arguments
     //  
@@ -139,6 +139,12 @@ function ciniki_services_jobUpdate($ciniki) {
 		ciniki_core_dbTransactionRollback($ciniki, 'ciniki.services');
 		return array('stat'=>'fail', 'err'=>array('pkg'=>'ciniki', 'code'=>'863', 'msg'=>'Unable to update job'));
 	}
+
+	//
+	// Add to the sync queue
+	//
+	$ciniki['syncqueue'][] = array('push'=>'ciniki.services.job', 
+		'args'=>array('id'=>$args['job_id']));
 
 	//
 	// Check if there's a note to add

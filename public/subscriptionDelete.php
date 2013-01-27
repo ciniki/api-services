@@ -16,7 +16,7 @@
 // -------
 // <rsp stat='ok' />
 //
-function ciniki_services_subscriptionDelete($ciniki) {
+function ciniki_services_subscriptionDelete(&$ciniki) {
     //  
     // Find all the required and optional arguments
     //  
@@ -74,6 +74,22 @@ function ciniki_services_subscriptionDelete($ciniki) {
 	}
 
 	//
+	// Get the uuid of the customer to be deleted
+	//
+	$strsql = "SELECT uuid FROM ciniki_service_subscriptions "
+		. "WHERE business_id = '" . ciniki_core_dbQuote($ciniki, $args['business_id']) . "' "
+		. "AND id = '" . ciniki_core_dbQuote($ciniki, $args['subscription_id']) . "' "
+		. "";
+	$rc = ciniki_core_dbHashQuery($ciniki, $strsql, 'ciniki.services', 'subscription');
+	if( $rc['stat'] != 'ok' ) {
+		return $rc;
+	}
+	if( !isset($rc['subscription']) ) {
+		return array('stat'=>'fail', 'err'=>array('pkg'=>'ciniki', 'code'=>'110', 'msg'=>'Unable to find existing subscription'));
+	}
+	$uuid = $rc['subscription']['uuid'];
+
+	//
 	// Remove the customer email address from the database.  It is still there in 
 	// the ciniki_customer_history table.
 	//
@@ -102,6 +118,9 @@ function ciniki_services_subscriptionDelete($ciniki) {
 	//
 	ciniki_core_loadMethod($ciniki, 'ciniki', 'businesses', 'private', 'updateModuleChangeDate');
 	ciniki_businesses_updateModuleChangeDate($ciniki, $args['business_id'], 'ciniki', 'services');
+
+	$ciniki['syncqueue'][] = array('push'=>'ciniki.services.subscription', 
+		'args'=>array('delete_uuid'=>$uuid, 'delete_id'=>$args['subscription_id']));
 
 	return array('stat'=>'ok');
 }

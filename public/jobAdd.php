@@ -39,7 +39,7 @@
 // -------
 // <rsp stat='ok' id='34' />
 //
-function ciniki_services_jobAdd($ciniki) {
+function ciniki_services_jobAdd(&$ciniki) {
     //  
     // Find all the required and optional arguments
     //  
@@ -136,12 +136,23 @@ function ciniki_services_jobAdd($ciniki) {
 		}
 		if( !isset($rc['rows'][0]) ) {
 			//
+			// Get a new UUID
+			//
+			ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'dbUUID');
+			$rc = ciniki_core_dbUUID($ciniki, 'ciniki.services');
+			if( $rc['stat'] != 'ok' ) {
+				return $rc;
+			}
+			$uuid = $rc['uuid'];
+
+			//
 			// Add the service subscription
 			//
-			$strsql = "INSERT INTO ciniki_service_subscriptions (business_id, "
+			$strsql = "INSERT INTO ciniki_service_subscriptions (uuid, business_id, "
 				. "service_id, customer_id, status, "
 				. "date_started, date_ended, "
 				. "date_added, last_updated) VALUES ("
+				. "'" . ciniki_core_dbQuote($ciniki, $uuid) . "', "
 				. "'" . ciniki_core_dbQuote($ciniki, $args['business_id']) . "', "
 				. "'" . ciniki_core_dbQuote($ciniki, $args['service_id']) . "', "
 				. "'" . ciniki_core_dbQuote($ciniki, $args['customer_id']) . "', "
@@ -165,6 +176,8 @@ function ciniki_services_jobAdd($ciniki) {
 			// Add all the fields to the change log
 			//
 			$rc = ciniki_core_dbAddModuleHistory($ciniki, 'ciniki.services', 'ciniki_service_history', 
+				$args['business_id'], 1, 'ciniki_service_subscriptions', $subscription_id, 'uuid', $uuid);
+			$rc = ciniki_core_dbAddModuleHistory($ciniki, 'ciniki.services', 'ciniki_service_history', 
 				$args['business_id'], 1, 'ciniki_service_subscriptions', $subscription_id, 'status', '10');
 			$rc = ciniki_core_dbAddModuleHistory($ciniki, 'ciniki.services', 'ciniki_service_history', 
 				$args['business_id'], 1, 'ciniki_service_subscriptions', $subscription_id, 'date_started', $args['pstart_date']);
@@ -180,6 +193,12 @@ function ciniki_services_jobAdd($ciniki) {
 						$args['business_id'], 1, 'ciniki_service_subscriptions', $subscription_id, $field, $args[$field]);
 				}
 			}
+			//
+			// Add subscription to sync queue
+			//
+			$ciniki['syncqueue'][] = array('push'=>'ciniki.services.subscription', 
+				'args'=>array('id'=>$subscription_id));
+
 			$args['subscription_id'] = $subscription_id;
 		} else {
 			$args['subscription_id'] = $rc['rows'][0]['id'];
@@ -293,6 +312,16 @@ function ciniki_services_jobAdd($ciniki) {
 	}
 
 	//
+	// Get a new UUID
+	//
+	ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'dbUUID');
+	$rc = ciniki_core_dbUUID($ciniki, 'ciniki.services');
+	if( $rc['stat'] != 'ok' ) {
+		return $rc;
+	}
+	$uuid = $rc['uuid'];
+
+	//
 	// Add the job to the database
 	//
 	$strsql = "INSERT INTO ciniki_service_jobs (uuid, business_id, subscription_id, "
@@ -301,7 +330,7 @@ function ciniki_services_jobAdd($ciniki) {
 		. "date_scheduled, date_started, date_due, date_completed, date_signedoff, "
 		. "efile_number, invoice_amount, tax1_name, tax1_amount, tax2_name, tax2_amount, "
 		. "date_added, last_updated) VALUES ("
-		. "UUID(), "
+		. "'" . ciniki_core_dbQuote($ciniki, $uuid) . "', "
 		. "'" . ciniki_core_dbQuote($ciniki, $args['business_id']) . "', "
 		. "'" . ciniki_core_dbQuote($ciniki, $args['subscription_id']) . "', "
 		. "'" . ciniki_core_dbQuote($ciniki, $args['service_id']) . "', "
@@ -337,6 +366,12 @@ function ciniki_services_jobAdd($ciniki) {
 	$job_id = $rc['insert_id'];
 
 	//
+	// Add the uuid to the history
+	//
+	$rc = ciniki_core_dbAddModuleHistory($ciniki, 'ciniki.services', 'ciniki_service_history', 
+		$args['business_id'], 1, 'ciniki_service_jobs', $job_id, 'uuid', $uuid);
+
+	//
 	// Add all the fields to the change log
 	//
 	$changelog_fields = array(
@@ -369,6 +404,12 @@ function ciniki_services_jobAdd($ciniki) {
 	}
 
 	//
+	// Add subscription to sync queue
+	//
+	$ciniki['syncqueue'][] = array('push'=>'ciniki.services.job', 
+		'args'=>array('id'=>$job_id));
+
+	//
 	// Setup the tasks for this job, from the ciniki_service_tasks
 	//
 	$strsql = "SELECT id, step, name, duration "
@@ -383,10 +424,22 @@ function ciniki_services_jobAdd($ciniki) {
 	}
 	$tasks = $rc['rows'];
 	foreach($tasks as $tid => $task) {
-		$strsql = "INSERT INTO ciniki_service_job_tasks (job_id, task_id, "
+		//
+		// Get a new UUID
+		//
+		ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'dbUUID');
+		$rc = ciniki_core_dbUUID($ciniki, 'ciniki.services');
+		if( $rc['stat'] != 'ok' ) {
+			return $rc;
+		}
+		$uuid = $rc['uuid'];
+
+		$strsql = "INSERT INTO ciniki_service_job_tasks (uuid, business_id, job_id, task_id, "
 			. "step, name, duration, status, "
 			. "date_due, "
 			. "date_added, last_updated) VALUES ("
+			. "'" . ciniki_core_dbQuote($ciniki, $uuid) . "', "
+			. "'" . ciniki_core_dbQuote($ciniki, $args['business_id']) . "', "
 			. "'" . ciniki_core_dbQuote($ciniki, $job_id) . "', "
 			. "'" . ciniki_core_dbQuote($ciniki, $task['id']) . "', "
 			. "'" . ciniki_core_dbQuote($ciniki, $task['step']) . "', "
@@ -403,6 +456,8 @@ function ciniki_services_jobAdd($ciniki) {
 		}
 		$task_id = $rc['insert_id'];
 		$rc = ciniki_core_dbAddModuleHistory($ciniki, 'ciniki.services', 'ciniki_service_history', 
+			$args['business_id'], 1, 'ciniki_service_job_tasks', $task_id, 'uuid', $uuid);
+		$rc = ciniki_core_dbAddModuleHistory($ciniki, 'ciniki.services', 'ciniki_service_history', 
 			$args['business_id'], 1, 'ciniki_service_job_tasks', $task_id, 'step', $task['step']);
 		$rc = ciniki_core_dbAddModuleHistory($ciniki, 'ciniki.services', 'ciniki_service_history', 
 			$args['business_id'], 1, 'ciniki_service_job_tasks', $task_id, 'name', $task['name']);
@@ -412,6 +467,11 @@ function ciniki_services_jobAdd($ciniki) {
 			$args['business_id'], 1, 'ciniki_service_job_tasks', $task_id, 'status', '10');
 		$rc = ciniki_core_dbAddModuleHistory($ciniki, 'ciniki.services', 'ciniki_service_history', 
 			$args['business_id'], 1, 'ciniki_service_job_tasks', $task_id, 'date_due', $args['date_due']);
+		//
+		// Add subscription to sync queue
+		//
+		$ciniki['syncqueue'][] = array('push'=>'ciniki.services.jobtask', 
+			'args'=>array('id'=>$task_id));
 	}
 
 	//

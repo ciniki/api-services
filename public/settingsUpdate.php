@@ -27,7 +27,7 @@
 // -------
 // <rsp stat='ok' id='34' />
 //
-function ciniki_services_settingsUpdate($ciniki) {
+function ciniki_services_settingsUpdate(&$ciniki) {
     //  
     // Find all the required and optional arguments
     //  
