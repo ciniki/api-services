@@ -8,6 +8,8 @@
 # Fields
 # ------
 # id:					The ID of the note.
+# uuid:					The Universal Unique ID for the note
+# business_id:			The ID of the business the note is attached to.
 # parent_id:			The ID of the parent, for nested notes.  **future**
 # job_id:				The ID of the job in the ciniki_service_jobs table.
 # task_id:				The ID of the job task which the notes are attached to.  **future**
