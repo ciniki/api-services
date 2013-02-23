@@ -190,7 +190,7 @@ function ciniki_services_jobUpdate(&$ciniki) {
 		$to_be_removed = array_diff($job_users, $args['assigned']);
 		if( is_array($to_be_removed) ) {
 			foreach($to_be_removed as $user_id) {
-				$rc = ciniki_core_threadRemoveUserPerms($ciniki, 'ciniki.services', 'user', 
+				$rc = ciniki_core_threadRemoveUserPerms($ciniki, 'ciniki.services', 'job_user', 
 					$args['business_id'], 'ciniki_service_job_users', 'ciniki_service_history',
 					'job', $args['job_id'], $user_id, 0x04);
 				if( $rc['stat'] != 'ok' ) {
@@ -201,7 +201,7 @@ function ciniki_services_jobUpdate(&$ciniki) {
 		$to_be_added = array_diff($args['assigned'], $job_users);
 		if( is_array($to_be_added) ) {
 			foreach($to_be_added as $user_id) {
-				$rc = ciniki_core_threadAddUserPerms($ciniki, 'ciniki.services', 'user',
+				$rc = ciniki_core_threadAddUserPerms($ciniki, 'ciniki.services', 'job_user',
 					$args['business_id'], 'ciniki_service_job_users', 'ciniki_service_history',
 					'job', $args['job_id'], $user_id, (0x04));
 				if( $rc['stat'] != 'ok' ) {

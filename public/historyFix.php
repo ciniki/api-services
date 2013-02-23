@@ -75,7 +75,7 @@ function ciniki_services_historyFix($ciniki) {
 	$rc = ciniki_core_dbFixTableHistory($ciniki, 'ciniki.services', $args['business_id'],
 		'ciniki_service_jobs', 'ciniki_service_history', 
 		array('uuid', 'subscription_id', 'service_id','customer_id','project_id', 'invoice_id', 
-			'name', 'pstart_date', 'pend_date', 'service_date', 'status', 
+			'tracking_id', 'name', 'pstart_date', 'pend_date', 'service_date', 'status', 
 			'date_scheduled', 'date_started', 'date_due', 'date_completed', 'date_signedoff', 
 			'efile_number', 'invoice_amount', 'tax1_name', 'tax1_amount', 'tax2_name', 'tax2_amount'));
 	if( $rc['stat'] != 'ok' ) {
@@ -97,7 +97,7 @@ function ciniki_services_historyFix($ciniki) {
 	//
 	$rc = ciniki_core_dbFixTableHistory($ciniki, 'ciniki.services', $args['business_id'],
 		'ciniki_service_job_notes', 'ciniki_service_history', 
-		array('uuid', 'job_id', 'task_id','user_id','content'));
+		array('uuid', 'parent_id', 'job_id', 'task_id','user_id','content'));
 	if( $rc['stat'] != 'ok' ) {
 		return $rc;
 	}

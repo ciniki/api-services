@@ -175,7 +175,8 @@ function ciniki_services_taskAdd(&$ciniki) {
 	ciniki_core_loadMethod($ciniki, 'ciniki', 'businesses', 'private', 'updateModuleChangeDate');
 	ciniki_businesses_updateModuleChangeDate($ciniki, $args['business_id'], 'ciniki', 'services');
 
-	$ciniki['syncqueue'][] = array('push'=>'ciniki.services.task', 'args'=>array('id'=>$task_id));
+	$ciniki['syncqueue'][] = array('push'=>'ciniki.services.task', 
+		'args'=>array('id'=>$task_id));
 
 	return array('stat'=>'ok', 'id'=>$task_id);
 }

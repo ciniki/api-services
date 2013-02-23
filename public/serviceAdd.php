@@ -168,7 +168,8 @@ function ciniki_services_serviceAdd(&$ciniki) {
 	ciniki_core_loadMethod($ciniki, 'ciniki', 'businesses', 'private', 'updateModuleChangeDate');
 	ciniki_businesses_updateModuleChangeDate($ciniki, $args['business_id'], 'ciniki', 'services');
 
-	$ciniki['syncqueue'][] = array('push'=>'ciniki.services.service', 'args'=>array('id'=>$service_id));
+	$ciniki['syncqueue'][] = array('push'=>'ciniki.services.service', 
+		'args'=>array('id'=>$service_id));
 
 	return array('stat'=>'ok', 'id'=>$service_id);
 }

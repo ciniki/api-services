@@ -499,7 +499,7 @@ function ciniki_services_jobAdd(&$ciniki) {
 	if( isset($args['assigned']) && is_array($args['assigned']) ) {
 		ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'threadAddUserPerms');
 		foreach( $args['assigned'] as $user_id ) {
-			$rc = ciniki_core_threadAddUserPerms($ciniki, 'ciniki.services', 'user', 
+			$rc = ciniki_core_threadAddUserPerms($ciniki, 'ciniki.services', 'job_user', 
 				$args['business_id'], 'ciniki_service_job_users', 'ciniki_service_history',
 				'job', $job_id, $user_id, (0x04));
 			if( $rc['stat'] != 'ok' ) {
