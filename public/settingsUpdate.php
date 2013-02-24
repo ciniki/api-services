@@ -113,6 +113,8 @@ function ciniki_services_settingsUpdate(&$ciniki) {
 			}
 			$rc = ciniki_core_dbAddModuleHistory($ciniki, 'ciniki.services', 'ciniki_service_history', $args['business_id'], 
 				2, 'ciniki_service_settings', $field, 'detail_value', $args[$field]);
+			$ciniki['syncqueue'][] = array('push'=>'ciniki.services.setting', 
+				'args'=>array('id'=>$field));
 		}
 	}
 

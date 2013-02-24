@@ -140,7 +140,7 @@ function ciniki_services_sync_objects($ciniki, &$sync, $business_id, $args) {
 			),
 		'history_table'=>'ciniki_service_history',
 		);
-	$objects['settings'] = array(
+	$objects['setting'] = array(
 		'type'=>'settings',
 		'name'=>'Service Settings',
 		'table'=>'ciniki_service_settings',
