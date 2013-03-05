@@ -54,7 +54,7 @@ function ciniki_services_jobDelete(&$ciniki) {
 	}   
 
 	//
-	// Get the uuid of the customer to be deleted
+	// Get the uuid of the job to be deleted
 	//
 	$strsql = "SELECT uuid FROM ciniki_service_jobs "
 		. "WHERE business_id = '" . ciniki_core_dbQuote($ciniki, $args['business_id']) . "' "
