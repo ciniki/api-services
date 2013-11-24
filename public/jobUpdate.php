@@ -178,6 +178,7 @@ function ciniki_services_jobUpdate(&$ciniki) {
 			. "FROM ciniki_service_job_users "
 			. "WHERE job_id = '" . ciniki_core_dbQuote($ciniki, $args['job_id']) . "' "
 			. "AND (perms&0x04) = 4 "
+			. "AND business_id = '" . ciniki_core_dbQuote($ciniki, $args['business_id']) . "' "
 			. "";
 		$rc = ciniki_core_dbQueryList($ciniki, $strsql, 'ciniki.services', 'users', 'user_id');
 		if( $rc['stat'] != 'ok' ) {
