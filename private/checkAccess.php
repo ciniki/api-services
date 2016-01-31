@@ -56,7 +56,7 @@ function ciniki_services_checkAccess($ciniki, $business_id, $method, $req_id, $r
 		. "AND user_id = '" . ciniki_core_dbQuote($ciniki, $ciniki['session']['user']['id']) . "' "
 		. "AND package = 'ciniki' "
 		. "AND status = 10 "
-		. "AND (permission_group = 'owners' OR permission_group = 'employees') "
+        . "AND (permission_group = 'owners' OR permission_group = 'employees' OR permission_group = 'resellers' ) "
 		. "";
 	ciniki_core_loadMethod($ciniki, 'ciniki', 'core', 'private', 'dbHashQuery');
 	$rc = ciniki_core_dbHashQuery($ciniki, $strsql, 'ciniki.businesses', 'user');
